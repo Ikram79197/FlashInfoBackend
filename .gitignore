@@ -1,0 +1,31 @@
+# Backend (Java/Maven)
+FlashInfoBackend/target/
+FlashInfoBackend/*.jar
+FlashInfoBackend/*.war
+FlashInfoBackend/*.class
+FlashInfoBackend/*.log
+FlashInfoBackend/.idea/
+FlashInfoBackend/*.iml
+FlashInfoBackend/.settings/
+FlashInfoBackend/.project
+FlashInfoBackend/.classpath
+
+# Frontend (Node/React)
+FlashInfoFrontend/node_modules/
+FlashInfoFrontend/dist/
+FlashInfoFrontend/build/
+FlashInfoFrontend/.env.local
+FlashInfoFrontend/.env.*.local
+FlashInfoFrontend/npm-debug.log*
+FlashInfoFrontend/yarn-debug.log*
+FlashInfoFrontend/yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
