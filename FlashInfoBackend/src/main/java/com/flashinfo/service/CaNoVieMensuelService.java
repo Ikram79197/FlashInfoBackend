@@ -4,7 +4,7 @@ import com.flashinfo.dto.CaMensuelDto;
 
 import java.util.List;
 
-public interface CaMensuelService {
+public interface CaNoVieMensuelService {
     List<CaMensuelDto> getCaNonVieMensuel();
     List<CaMensuelDto> getCaVieMensuel();
 }

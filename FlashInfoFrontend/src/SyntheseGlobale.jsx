@@ -18,25 +18,29 @@ function SyntheseGlobale() {
   const [syntheseVieData, setSyntheseVieData] = useState([]);
   const [syntheseNonVieData, setSyntheseNonVieData] = useState([]);
   const [emissions500Data, setEmissions500Data] = useState([]);
+  const [caNonVieMensuelData, setCaNonVieMensuelData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [vieData, nonVieData, emissionsData] = await Promise.all([
+        const [vieData, nonVieData, emissionsData, nonVieMensuelData] = await Promise.all([
           getCaVie(),
           getCaNonVie(),
-          getEmissions500KDHS()
+          getEmissions500KDHS(),
+          getCaNonVieMensuel()
         ]);
         setSyntheseVieData(Array.isArray(vieData) ? vieData : []);
         setSyntheseNonVieData(Array.isArray(nonVieData) ? nonVieData : []);
         setEmissions500Data(Array.isArray(emissionsData) ? emissionsData : []);
+        setCaNonVieMensuelData(Array.isArray(nonVieMensuelData) ? nonVieMensuelData : []);
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
         // Set empty arrays in case of error to prevent crashes
         setSyntheseVieData([]);
         setSyntheseNonVieData([]);
         setEmissions500Data([]);
+        setCaNonVieMensuelData([]);
       } finally {
         setLoading(false);
       }
@@ -461,7 +465,7 @@ function SyntheseGlobale() {
           key: '1',
           label: (
             <span className="text-lg font-semibold text-zinc-900">
-              CA Non Vie du mois de Novembre au 25/11/2025 par branche et par BU
+              CA Non Vie du mois de Decembre au 10/12/2025 par branche et par BU
             </span>
           ),
           children: (
@@ -470,80 +474,167 @@ function SyntheseGlobale() {
                 className="rounded-xl overflow-hidden text-xs"
                 pagination={false}
                 columns={[
-                  { title: 'BU', dataIndex: 'bu', key: 'bu', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-medium text-blue-900'}>{text}</span> },
-                  { title: 'AUTO CA', dataIndex: 'autoCa', key: 'autoCa', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  {
-                    title: 'AUTO Taux de remplissage', dataIndex: 'autoEvo', key: 'autoEvo', align: 'right', render: (text, record) => {
-                      const color = getEvolutionColor(text);
-                      let style = "px-2 py-1 rounded font-bold ";
-                      if (color.includes("red")) style += "bg-red-500 text-white";
-                      else if (color.includes("orange")) style += "bg-orange-400 text-white";
-                      else if (color.includes("green-500")) style += "bg-green-500 text-white";
-                      else if (color.includes("green-700")) style += "bg-green-700 text-white";
-                      else style += "bg-gray-100 text-blue-900";
-                      return <span className={record.key === 'total' ? style + ' bg-blue-100' : style + ' bg-blue-50'}>{text}</span>;
-                    }
+                  { 
+                    title: 'BU', 
+                    dataIndex: 'bu', 
+                    key: 'bu', 
+                    render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-medium text-blue-900'}>{text}</span> 
                   },
-                  { title: 'AT CA', dataIndex: 'atCa', key: 'atCa', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  {
-                    title: 'AT Taux de remplissage', dataIndex: 'atEvo', key: 'atEvo', align: 'right', render: (text, record) => {
-                      const color = getEvolutionColor(text);
-                      let style = "px-2 py-1 rounded font-bold ";
-                      if (color.includes("red")) style += "bg-red-500 text-white";
-                      else if (color.includes("orange")) style += "bg-orange-400 text-white";
-                      else if (color.includes("green-500")) style += "bg-green-500 text-white";
-                      else if (color.includes("green-700")) style += "bg-green-700 text-white";
-                      else style += "bg-gray-100 text-blue-900";
-                      return <span className={record.key === 'total' ? style + ' bg-blue-100' : style + ' bg-blue-50'}>{text}</span>;
-                    }
+                  { 
+                    title: 'AUTO', 
+                    children: [
+                      { 
+                        title: 'CA', 
+                        dataIndex: 'auto', 
+                        key: 'auto', 
+                        align: 'right', 
+                        render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> 
+                      },
+                      { 
+                        title: 'Taux de remplissage', 
+                        dataIndex: 'tauxRemplissageAuto', 
+                        key: 'tauxRemplissageAuto', 
+                        align: 'right', 
+                        render: (text) => {
+                          const color = getEvolutionColor(text);
+                          let style = "px-2 py-1 rounded font-bold ";
+                          if (color.includes("red")) style += "bg-red-500 text-white";
+                          else if (color.includes("orange")) style += "bg-orange-400 text-white";
+                          else if (color.includes("green-500")) style += "bg-green-500 text-white";
+                          else if (color.includes("green-700")) style += "bg-green-700 text-white";
+                          else style += "bg-gray-100 text-blue-900";
+                          return <span className={style}>{text}</span>;
+                        }
+                      }
+                    ]
                   },
-                  { title: 'MALADIE CA', dataIndex: 'maladieCa', key: 'maladieCa', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  {
-                    title: 'MALADIE Taux de remplissage', dataIndex: 'maladieEvo', key: 'maladieEvo', align: 'right', render: (text, record) => {
-                      const color = getEvolutionColor(text);
-                      let style = "px-2 py-1 rounded font-bold ";
-                      if (color.includes("red")) style += "bg-red-500 text-white";
-                      else if (color.includes("orange")) style += "bg-orange-400 text-white";
-                      else if (color.includes("green-500")) style += "bg-green-500 text-white";
-                      else if (color.includes("green-700")) style += "bg-green-700 text-white";
-                      else style += "bg-gray-100 text-blue-900";
-                      return <span className={record.key === 'total' ? style + ' bg-blue-100' : style + ' bg-blue-50'}>{text}</span>;
-                    }
+                  { 
+                    title: 'AT', 
+                    children: [
+                      { 
+                        title: 'CA', 
+                        dataIndex: 'at', 
+                        key: 'at', 
+                        align: 'right', 
+                        render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> 
+                      },
+                      { 
+                        title: 'Taux de remplissage', 
+                        dataIndex: 'tauxRemplissageAt', 
+                        key: 'tauxRemplissageAt', 
+                        align: 'right', 
+                        render: (text) => {
+                          const color = getEvolutionColor(text);
+                          let style = "px-2 py-1 rounded font-bold ";
+                          if (color.includes("red")) style += "bg-red-500 text-white";
+                          else if (color.includes("orange")) style += "bg-orange-400 text-white";
+                          else if (color.includes("green-500")) style += "bg-green-500 text-white";
+                          else if (color.includes("green-700")) style += "bg-green-700 text-white";
+                          else style += "bg-gray-100 text-blue-900";
+                          return <span className={style}>{text}</span>;
+                        }
+                      }
+                    ]
                   },
-                  { title: 'DIVERS CA', dataIndex: 'diversCa', key: 'diversCa', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  {
-                    title: 'DIVERS Taux de remplissage', dataIndex: 'diversEvo', key: 'diversEvo', align: 'right', render: (text, record) => {
-                      const color = getEvolutionColor(text);
-                      let style = "px-2 py-1 rounded font-bold ";
-                      if (color.includes("red")) style += "bg-red-500 text-white";
-                      else if (color.includes("orange")) style += "bg-orange-400 text-white";
-                      else if (color.includes("green-500")) style += "bg-green-500 text-white";
-                      else if (color.includes("green-700")) style += "bg-green-700 text-white";
-                      else style += "bg-gray-100 text-blue-900";
-                      return <span className={record.key === 'total' ? style + ' bg-blue-100' : style + ' bg-blue-50'}>{text}</span>;
-                    }
+                  { 
+                    title: 'MALADIE', 
+                    children: [
+                      { 
+                        title: 'CA', 
+                        dataIndex: 'maladie', 
+                        key: 'maladie', 
+                        align: 'right', 
+                        render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> 
+                      },
+                      { 
+                        title: 'Taux de remplissage', 
+                        dataIndex: 'tauxRemplissageMaladie', 
+                        key: 'tauxRemplissageMaladie', 
+                        align: 'right', 
+                        render: (text) => {
+                          const color = getEvolutionColor(text);
+                          let style = "px-2 py-1 rounded font-bold ";
+                          if (color.includes("red")) style += "bg-red-500 text-white";
+                          else if (color.includes("orange")) style += "bg-orange-400 text-white";
+                          else if (color.includes("green-500")) style += "bg-green-500 text-white";
+                          else if (color.includes("green-700")) style += "bg-green-700 text-white";
+                          else style += "bg-gray-100 text-blue-900";
+                          return <span className={style}>{text}</span>;
+                        }
+                      }
+                    ]
                   },
-                  { title: 'Total CA', dataIndex: 'totalCa', key: 'totalCa', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  {
-                    title: 'Total Taux de remplissage', dataIndex: 'totalEvo', key: 'totalEvo', align: 'right', render: (text, record) => {
-                      const color = getEvolutionColor(text);
-                      let style = "px-2 py-1 rounded font-bold ";
-                      if (color.includes("red")) style += "bg-red-500 text-white";
-                      else if (color.includes("orange")) style += "bg-orange-400 text-white";
-                      else if (color.includes("green-500")) style += "bg-green-500 text-white";
-                      else if (color.includes("green-700")) style += "bg-green-700 text-white";
-                      else style += "bg-gray-100 text-blue-900";
-                      return <span className={record.key === 'total' ? style + ' bg-blue-100' : style + ' bg-blue-50'}>{text}</span>;
-                    }
+                  { 
+                    title: 'DIVERS', 
+                    children: [
+                      { 
+                        title: 'CA', 
+                        dataIndex: 'divers', 
+                        key: 'divers', 
+                        align: 'right', 
+                        render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> 
+                      },
+                      { 
+                        title: 'Taux de remplissage', 
+                        dataIndex: 'tauxRemplissageDivers', 
+                        key: 'tauxRemplissageDivers', 
+                        align: 'right', 
+                        render: (text) => {
+                          const color = getEvolutionColor(text);
+                          let style = "px-2 py-1 rounded font-bold ";
+                          if (color.includes("red")) style += "bg-red-500 text-white";
+                          else if (color.includes("orange")) style += "bg-orange-400 text-white";
+                          else if (color.includes("green-500")) style += "bg-green-500 text-white";
+                          else if (color.includes("green-700")) style += "bg-green-700 text-white";
+                          else style += "bg-gray-100 text-blue-900";
+                          return <span className={style}>{text}</span>;
+                        }
+                      }
+                    ]
                   },
+                  { 
+                    title: 'Total', 
+                    children: [
+                      { 
+                        title: 'CA', 
+                        dataIndex: 'total', 
+                        key: 'total', 
+                        align: 'right', 
+                        render: (text, record) => <span className={record.key === 'total' ? 'font-bold bg-blue-100 text-blue-900 px-1 py-0.5 rounded' : 'font-bold bg-blue-50 text-blue-900 px-1 py-0.5 rounded'}>{text}</span> 
+                      },
+                      { 
+                        title: 'Taux de remplissage', 
+                        dataIndex: 'tauxRemplissageTotal', 
+                        key: 'tauxRemplissageTotal', 
+                        align: 'right', 
+                        render: (text) => {
+                          const color = getEvolutionColor(text);
+                          let style = "px-2 py-1 rounded font-bold ";
+                          if (color.includes("red")) style += "bg-red-500 text-white";
+                          else if (color.includes("orange")) style += "bg-orange-400 text-white";
+                          else if (color.includes("green-500")) style += "bg-green-500 text-white";
+                          else if (color.includes("green-700")) style += "bg-green-700 text-white";
+                          else style += "bg-gray-100 text-blue-900";
+                          return <span className={style}>{text}</span>;
+                        }
+                      }
+                    ]
+                  }
                 ]}
-                dataSource={[
-                  { key: 'courtage', bu: 'COURTAGE', autoCa: '4 213 941', autoEvo: '24,09 %', atCa: '-68 368', atEvo: '-3,27 %', maladieCa: '4 885 681', maladieEvo: '76,72 %', diversCa: '3 199 363', diversEvo: '106,90 %', totalCa: '12 230 617', totalEvo: '42,25 %' },
-                  { key: 'maem', bu: 'MAEM', autoCa: '17 820 999', autoEvo: '98,68 %', atCa: '380 297', atEvo: '93,47 %', maladieCa: '149 439', maladieEvo: '87,30 %', diversCa: '1 125 957', diversEvo: '82,71 %', totalCa: '19 476 691', totalEvo: '97,39 %' },
-                  { key: 'mamda', bu: 'MAMDA_HORS_MRC', autoCa: '25 009 865', autoEvo: '91,71 %', atCa: '11 164 836', atEvo: '340,96 %', maladieCa: '20 000', maladieEvo: '2,80 %', diversCa: '1 067 309', diversEvo: '67,59 %', totalCa: '37 262 009', totalEvo: '113,47 %' },
-                  { key: 'mcma', bu: 'MCMA_DIRECT', autoCa: '15 130 796', autoEvo: '95,76 %', atCa: '410 387', atEvo: '78,97 %', maladieCa: '752 133', maladieEvo: '151,55 %', diversCa: '947 949', diversEvo: '70,53 %', totalCa: '17 241 265', totalEvo: '94,94 %' },
-                  { key: 'total', bu: 'Total', autoCa: '62 175 601', autoEvo: '79,08 %', atCa: '11 887 151', atEvo: '188,95 %', maladieCa: '5 807 253', maladieEvo: '74,92 %', diversCa: '6 340 578', diversEvo: '87,13 %', totalCa: '86 210 582', totalEvo: '86,26 %' },
-                ]}
+                dataSource={caNonVieMensuelData.map((item, index) => ({
+                  key: item.bu?.toLowerCase().replace(/[^a-z0-9]/g, '') || `row-${index}`,
+                  bu: item.bu || '',
+                  auto: item.auto || '0',
+                  tauxRemplissageAuto: item.tauxRemplissageAuto || '0,00 %',
+                  at: item.at || '0',
+                  tauxRemplissageAt: item.tauxRemplissageAt || '0,00 %',
+                  maladie: item.maladie || '0',
+                  tauxRemplissageMaladie: item.tauxRemplissageMaladie || '0,00 %',
+                  divers: item.divers || '0',
+                  tauxRemplissageDivers: item.tauxRemplissageDivers || '0,00 %',
+                  total: item.total || '0',
+                  tauxRemplissageTotal: item.tauxRemplissageTotal || '0,00 %'
+                }))}
                 rowClassName={(record) => record.key === 'total' ? 'bg-zinc-100 font-bold' : ''}
               />
             </div>

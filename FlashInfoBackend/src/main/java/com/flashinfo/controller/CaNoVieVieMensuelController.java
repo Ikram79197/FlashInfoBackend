@@ -1,7 +1,7 @@
 package com.flashinfo.controller;
 
 import com.flashinfo.dto.CaMensuelDto;
-import com.flashinfo.service.CaMensuelService;
+import com.flashinfo.service.CaNoVieMensuelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -15,9 +15,9 @@ import java.util.List;
 @RequestMapping("/api")
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 @RequiredArgsConstructor
-public class CaMensuelController {
+public class CaNoVieVieMensuelController {
 
-    private final CaMensuelService caMensuelService;
+    private final CaNoVieMensuelService caMensuelService;
 
     @GetMapping("/ca-non-vie-mensuel")
     public ResponseEntity<List<CaMensuelDto>> getCaNonVieMensuel() {

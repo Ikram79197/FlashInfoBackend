@@ -18,17 +18,32 @@ public class CaMensuelDto {
     @JsonProperty("auto")
     private String auto;
     
+    @JsonProperty("tauxRemplissageAuto")
+    private String tauxRemplissageAuto;
+    
     @JsonProperty("at")
     private String at;
+    
+    @JsonProperty("tauxRemplissageAt")
+    private String tauxRemplissageAt;
     
     @JsonProperty("maladie")
     private String maladie;
     
+    @JsonProperty("tauxRemplissageMaladie")
+    private String tauxRemplissageMaladie;
+    
     @JsonProperty("divers")
     private String divers;
     
+    @JsonProperty("tauxRemplissageDivers")
+    private String tauxRemplissageDivers;
+    
     @JsonProperty("total")
     private String total;
+    
+    @JsonProperty("tauxRemplissageTotal")
+    private String tauxRemplissageTotal;
     
     // Factory method pour créer depuis les données BU
     public static CaMensuelDto createFromBuData(String bu, BigDecimal auto, BigDecimal at, 
@@ -41,6 +56,45 @@ public class CaMensuelDto {
         dto.setDivers(formatAmount(divers));
         dto.setTotal(dto.calculateTotal());
         return dto;
+    }
+    
+    // Factory method avec taux de remplissage
+    public static CaMensuelDto createFromBuDataWithTaux(String bu, BigDecimal auto, BigDecimal at, 
+                                                        BigDecimal maladie, BigDecimal divers,
+                                                        int currentDay, int totalDaysInMonth) {
+        CaMensuelDto dto = new CaMensuelDto();
+        dto.setBu(bu);
+        dto.setAuto(formatAmount(auto));
+        dto.setAt(formatAmount(at));
+        dto.setMaladie(formatAmount(maladie));
+        dto.setDivers(formatAmount(divers));
+        dto.setTotal(dto.calculateTotal());
+        
+        // Calculer les taux de remplissage
+        dto.setTauxRemplissageAuto(calculateTauxRemplissage(auto, currentDay, totalDaysInMonth));
+        dto.setTauxRemplissageAt(calculateTauxRemplissage(at, currentDay, totalDaysInMonth));
+        dto.setTauxRemplissageMaladie(calculateTauxRemplissage(maladie, currentDay, totalDaysInMonth));
+        dto.setTauxRemplissageDivers(calculateTauxRemplissage(divers, currentDay, totalDaysInMonth));
+        
+        BigDecimal total = auto.add(at).add(maladie).add(divers);
+        dto.setTauxRemplissageTotal(calculateTauxRemplissage(total, currentDay, totalDaysInMonth));
+        
+        return dto;
+    }
+    
+    private static String calculateTauxRemplissage(BigDecimal montant, int currentDay, int totalDaysInMonth) {
+        if (montant == null || montant.compareTo(BigDecimal.ZERO) == 0) {
+            return "0,00 %";
+        }
+        
+        // Taux = (CA actuel / Jours écoulés) × Jours totaux du mois / CA actuel × 100
+        // Simplifié: Taux = (Jours écoulés / Jours totaux) × 100
+        // Pour avoir le taux de remplissage par rapport à l'objectif mensuel estimé
+        double tauxJournalier = montant.doubleValue() / currentDay;
+        double objectifMensuel = tauxJournalier * totalDaysInMonth;
+        double taux = (montant.doubleValue() / objectifMensuel) * 100;
+        
+        return String.format("%.2f %%", taux).replace('.', ',');
     }
     
     public static String formatAmount(BigDecimal amount) {
