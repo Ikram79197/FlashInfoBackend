@@ -20,14 +20,14 @@ public class ChiffreAffairesDto {
     
     private String type;
     
-    @JsonProperty("ca_25_11_2025")
-    private String ca25112025;
+    @JsonProperty("ca_du_jour")
+    private String caDuJour;
     
-    @JsonProperty("ca_nov_2025")
-    private String caNov2025;
+    @JsonProperty("ca_mois_actuel")
+    private String caMoisActuel;
     
-    @JsonProperty("ca_nov_2024")
-    private String caNov2024;
+    @JsonProperty("ca_mois_annee_precedente")
+    private String caMoisAnneePrecedente;
     
     @JsonProperty("taux_remplissage")
     private String tauxRemplissage;
@@ -38,11 +38,11 @@ public class ChiffreAffairesDto {
     @JsonProperty("ytd_evolution")
     private String ytdEvolution;
     
-    @JsonProperty("ca_oct_2025")
-    private String caOct2025;
+    @JsonProperty("ca_mois_precedent")
+    private String caMoisPrecedent;
     
-    @JsonProperty("evolution_oct_2025")
-    private String evolutionOct2025;
+    @JsonProperty("evolution_mois_precedent")
+    private String evolutionMoisPrecedent;
     
     // Méthodes utilitaires pour la conversion des nombres
     public static String formatCurrency(BigDecimal amount) {

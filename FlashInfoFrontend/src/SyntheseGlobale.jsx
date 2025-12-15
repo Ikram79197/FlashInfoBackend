@@ -1,17 +1,76 @@
 import React, { useState, useEffect } from "react";
 import { Table, Collapse } from "antd";
-import { getCaVie, getCaNonVie, getCaNonVieMensuel, getEmissions500KDHS } from "./Api/FlashInfoApi";
+import { getCaVie, getCaNonVie, getCaNonVieMensuel, getCaVieMensuel, getEmissions500KDHS, getCaNonVieThisMonth, getCaVieThisMonth } from "./Api/FlashInfoApi";
+
+// Fonctions utilitaires pour les dates
+function getCurrentDate() {
+  const today = new Date();
+  // Soustraire 1 jour pour obtenir J-1
+  today.setDate(today.getDate() - 1);
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const year = today.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+function getCurrentMonthName() {
+  const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const today = new Date();
+  // Soustraire 1 jour pour obtenir J-1
+  today.setDate(today.getDate() - 1);
+  return months[today.getMonth()];
+}
+
+function getCurrentYear() {
+  return new Date().getFullYear();
+}
+
+function getPreviousYear() {
+  return new Date().getFullYear() - 1;
+}
+
+// Fonction pour obtenir le mois précédent et l'année correspondante
+function getPreviousMonthNameAndYear() {
+  const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const today = new Date();
+  today.setDate(today.getDate() - 1); // Pour gérer le cas J-1
+  let month = today.getMonth();
+  let year = today.getFullYear();
+  if (month === 0) {
+    month = 11;
+    year = year - 1;
+  } else {
+    month = month - 1;
+  }
+  return `${months[month]} ${year}`;
+}
 
 // Fonction utilitaire pour déterminer la couleur selon la valeur d'évolution
 function getEvolutionColor(value) {
   if (value === "" || value == null) return "";
-  // Nettoyer la valeur (ex: "-4,29%" ou "38,15%")
-  const num = parseFloat(value.replace("%", "").replace(",", "."));
-  if (isNaN(num)) return "";
-  if (num < 0) return "bg-red-500 text-white"; // baisse
-  if (num < 5) return "bg-orange-400"; // <5%
-  if (num < 100) return "bg-green-500 text-white"; // >5%
-  return "bg-green-700 text-white"; // >100%
+  
+  try {
+    // Nettoyer la valeur (ex: "-4,29%" ou "38,15 %")
+    let numStr = value.toString().trim();
+    
+    // Supprimer les espaces et le signe pourcent
+    numStr = numStr.replace(/\s+/g, '');
+    numStr = numStr.replace('%', '');
+    
+    // Remplacer la virgule par un point pour le parsing
+    numStr = numStr.replace(',', '.');
+    
+    const num = parseFloat(numStr);
+    
+    if (isNaN(num)) return "";
+    if (num < 0) return "bg-red-500 text-white"; // baisse - texte blanc
+    if (num < 5) return "bg-orange-400 text-white"; // <5% - texte blanc
+    if (num < 100) return "bg-green-500 text-white"; // >5% - texte blanc
+    return "bg-green-700 text-white"; // >100% - texte blanc
+  } catch (error) {
+    console.error('Erreur dans getEvolutionColor:', error, value);
+    return "";
+  }
 }
 
 function SyntheseGlobale() {
@@ -19,21 +78,31 @@ function SyntheseGlobale() {
   const [syntheseNonVieData, setSyntheseNonVieData] = useState([]);
   const [emissions500Data, setEmissions500Data] = useState([]);
   const [caNonVieMensuelData, setCaNonVieMensuelData] = useState([]);
+  const [caVieMensuelData, setCaVieMensuelData] = useState([]);
+  const [caNonVieThisMonthData, setCaNonVieThisMonthData] = useState([]);
+  const [caVieThisMonthData, setCaVieThisMonthData] = useState([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [vieData, nonVieData, emissionsData, nonVieMensuelData] = await Promise.all([
+        const [vieData, nonVieData, emissionsData, nonVieMensuelData, vieMensuelData, caNonVieThisMonth ,caVieThisMonth] = await Promise.all([
           getCaVie(),
           getCaNonVie(),
           getEmissions500KDHS(),
-          getCaNonVieMensuel()
+          getCaNonVieMensuel(),
+          getCaVieMensuel(),
+          getCaNonVieThisMonth(),
+          getCaVieThisMonth()
         ]);
+        console.log('caVieThisMonth:', caVieThisMonth); 
         setSyntheseVieData(Array.isArray(vieData) ? vieData : []);
         setSyntheseNonVieData(Array.isArray(nonVieData) ? nonVieData : []);
         setEmissions500Data(Array.isArray(emissionsData) ? emissionsData : []);
         setCaNonVieMensuelData(Array.isArray(nonVieMensuelData) ? nonVieMensuelData : []);
+        setCaVieMensuelData(Array.isArray(vieMensuelData) ? vieMensuelData : []);
+        setCaNonVieThisMonthData(Array.isArray(caNonVieThisMonth) ? caNonVieThisMonth : []);
+        setCaVieThisMonthData(Array.isArray(caVieThisMonth) ? caVieThisMonth : []);
+
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
         // Set empty arrays in case of error to prevent crashes
@@ -41,12 +110,21 @@ function SyntheseGlobale() {
         setSyntheseNonVieData([]);
         setEmissions500Data([]);
         setCaNonVieMensuelData([]);
+        setCaVieMensuelData([]);
+        setCaNonVieThisMonthData([]);
       } finally {
         setLoading(false);
       }
     };
 
+    // Charger les données immédiatement
     fetchData();
+
+    // Rafraîchir les données toutes les 5 minutes (300000 ms)
+    const interval = setInterval(fetchData, 300000);
+
+    // Nettoyer l'intervalle lors du démontage du composant
+    return () => clearInterval(interval);
   }, []);
 
   // Fonction helper pour parser les nombres formatés
@@ -156,9 +234,9 @@ function SyntheseGlobale() {
                 columns={[
                   { title: '', dataIndex: 'type', key: 'type', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-medium text-blue-900'}>{text}</span> },
                   { title: 'CA du jour', dataIndex: 'caJour', key: 'caJour', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  { title: 'CA du mois de Novembre arrêté au 25/11/2025', dataIndex: 'caMoisNov', key: 'caMoisNov', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  { title: 'CA du mois de Novembre 2024', dataIndex: 'caMois2024', key: 'caMois2024', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  { title: 'Taux de remplissage 2025 %', dataIndex: 'tauxRemplissage', key: 'tauxRemplissage', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold bg-green-200 text-blue-900 px-2 py-1 rounded' : 'bg-green-300 text-blue-900 px-2 py-1 rounded'}>{text}</span> },
+                  { title: `CA du mois de ${getCurrentMonthName()} arrêté au ${getCurrentDate()}`, dataIndex: 'caMoisNov', key: 'caMoisNov', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
+                  { title: `CA du mois de ${getCurrentMonthName()} ${getPreviousYear()}`, dataIndex: 'caMois2024', key: 'caMois2024', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
+                  { title: `Taux de remplissage ${getCurrentYear()} %`, dataIndex: 'tauxRemplissage', key: 'tauxRemplissage', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold bg-green-200 text-blue-900 px-2 py-1 rounded' : 'bg-green-300 text-blue-900 px-2 py-1 rounded'}>{text}</span> },
                 ]}
                 dataSource={[
                   { key: 'nonvie', type: 'Non Vie', caJour: '3 385 336', caMoisNov: '86 210 582', caMois2024: '99 944 035', tauxRemplissage: '86,26 %' },
@@ -231,96 +309,58 @@ function SyntheseGlobale() {
 
       {/* Bloc 3 : CA Non Vie par branche et par BU */}
       <Collapse
-        defaultActiveKey={['1']}
-        items={[{
-          key: '1',
-          label: (
-            <span className="text-lg font-semibold text-zinc-900">
-              CA Non Vie du 25/11/2025 par branche et par BU
-            </span>
-          ),
-          children: (
-            <div className="bg-white border border-zinc-200 rounded-xl shadow-sm p-2">
-              <Table
-                className="rounded-xl overflow-hidden text-xs compact-table"
-                size="small"
-                pagination={false}
-                columns={[
-                  {
-                    title: 'BU', dataIndex: 'bu', key: 'bu', align: 'left', render: (text, record) =>
-                      <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-medium text-blue-900'}>{text}</span>
-                  },
-                  { title: 'AUTO', dataIndex: 'auto', key: 'auto', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  { title: 'AT', dataIndex: 'at', key: 'at', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  { title: 'MALADIE', dataIndex: 'maladie', key: 'maladie', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  { title: 'DIVERS', dataIndex: 'divers', key: 'divers', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
-                  { title: 'Total', dataIndex: 'total', key: 'total', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold bg-blue-100 text-blue-900 px-1 py-0.5 rounded' : 'font-bold bg-blue-50 text-blue-900 px-1 py-0.5 rounded'}>{text}</span> },
-                ]}
-                dataSource={(() => {
-                  // Grouper par BU (hors Total), additionner les montants
-                  const grouped = {};
-                  let totalAuto = 0, totalAt = 0, totalMaladie = 0, totalDivers = 0, totalTotal = 0;
-                  
-                  // Helper pour convertir string ou number en number
-                  const toNumber = (val) => {
-                    if (typeof val === 'number') return val;
-                    if (typeof val === 'string') return parseInt(val.replace(/\s/g, '').replace(/,/g, '')) || 0;
-                    return 0;
-                  };
-                  
-                  (syntheseNonVieData || []).forEach(item => {
-                    if (!item.bu || item.bu.toLowerCase() === 'total') return;
-                    const bu = item.bu;
-                    const auto = toNumber(item.auto);
-                    const at = toNumber(item.at);
-                    const maladie = toNumber(item.maladie);
-                    const divers = toNumber(item.divers);
-                    const total = toNumber(item.total) || (auto+at+maladie+divers);
-                    if (!grouped[bu]) {
-                      grouped[bu] = { bu, auto: 0, at: 0, maladie: 0, divers: 0, total: 0 };
-                    }
-                    grouped[bu].auto += auto;
-                    grouped[bu].at += at;
-                    grouped[bu].maladie += maladie;
-                    grouped[bu].divers += divers;
-                    grouped[bu].total += total;
-                  });
-                  // Formatage
-                  const format = n => n.toLocaleString('fr-FR').replace(/,/g, ' ');
-                  const rows = Object.values(grouped).map((item, idx) => {
-                    totalAuto += item.auto;
-                    totalAt += item.at;
-                    totalMaladie += item.maladie;
-                    totalDivers += item.divers;
-                    totalTotal += item.total;
-                    return {
-                      key: item.bu.toLowerCase().replace(/[^a-z0-9]/g, ''),
-                      bu: item.bu,
-                      auto: format(item.auto),
-                      at: format(item.at),
-                      maladie: format(item.maladie),
-                      divers: format(item.divers),
-                      total: format(item.total)
-                    };
-                  });
-                  // Ligne total
-                  rows.push({
-                    key: 'total',
-                    bu: 'Total',
-                    auto: format(totalAuto),
-                    at: format(totalAt),
-                    maladie: format(totalMaladie),
-                    divers: format(totalDivers),
-                    total: format(totalTotal)
-                  });
-                  return rows;
-                })()}
-                rowClassName={(record) => record.key === 'total' ? 'bg-zinc-100 font-bold' : ''}
-              />
-            </div>
-          )
-        }]}
-      />
+  defaultActiveKey={['1']}
+  items={[{
+    key: '1',
+    label: (
+      <span className="text-lg font-semibold text-zinc-900">
+        CA Non Vie du {getCurrentDate()} par branche et par BU
+      </span>
+    ),
+    children: (
+      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm p-2">
+        <Table
+          className="rounded-xl overflow-hidden text-xs compact-table"
+          size="small"
+          pagination={false}
+          columns={[
+            {
+              title: 'BU', dataIndex: 'bu', key: 'bu', align: 'left', render: (text, record) =>
+                <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-medium text-blue-900'}>{text}</span>
+            },
+            { title: 'AUTO', dataIndex: 'auto', key: 'auto', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
+            { title: 'AT', dataIndex: 'at', key: 'at', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
+            { title: 'MALADIE', dataIndex: 'maladie', key: 'maladie', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
+            { title: 'DIVERS', dataIndex: 'divers', key: 'divers', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> },
+            { title: 'Total', dataIndex: 'total', key: 'total', align: 'right', render: (text, record) => <span className={record.key === 'total' ? 'font-bold bg-blue-100 text-blue-900 px-1 py-0.5 rounded' : 'font-bold bg-blue-50 text-blue-900 px-1 py-0.5 rounded'}>{text}</span> },
+          ]}
+          dataSource={
+            (syntheseNonVieData || []).map((item, idx) => {
+              // Utiliser les données du jour (syntheseNonVieData)
+              const formatNumber = (num) => {
+                if (num === undefined || num === null) return '0';
+                // Convertir en nombre si c'est une chaîne
+                const value = typeof num === 'string' ? parseFloat(num) : num;
+                return Math.round(value).toLocaleString('fr-FR');
+              };
+              
+              return {
+                key: item.bu && item.bu.toLowerCase() === 'total' ? 'total' : (item.bu || `row-${idx}`),
+                bu: item.bu || '',
+                auto: formatNumber(item.auto),
+                at: formatNumber(item.at),
+                maladie: formatNumber(item.maladie),
+                divers: formatNumber(item.divers),
+                total: formatNumber(item.total)
+              };
+            })
+          }
+          rowClassName={(record) => record.key === 'total' ? 'bg-zinc-100 font-bold' : ''}
+        />
+      </div>
+    )
+  }]}
+/>
       <Collapse
         defaultActiveKey={['1']}
         items={[
@@ -328,7 +368,7 @@ function SyntheseGlobale() {
             key: '1',
             label: (
               <span className="text-lg font-semibold text-zinc-900">
-                CA Vie du 25/11/2025 par branche et par BU
+                CA Vie du {getCurrentDate()} par branche et par BU
               </span>
             ),
             children: (
@@ -425,6 +465,18 @@ function SyntheseGlobale() {
               <Table
                 className="rounded-xl overflow-hidden text-xs"
                 pagination={{ pageSize: 10 }}
+                locale={{
+                  emptyText: (
+                    <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '16px', color: '#1e40af', fontWeight: '600', marginBottom: '8px' }}>
+                        Il n'y a pas d'émissions supérieures à 500K
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#64748b' }}>
+                        Aucune émission n'a dépassé le seuil de 500 000 DHS
+                      </div>
+                    </div>
+                  )
+                }}
                 columns={[
                   { title: 'NON VIE', dataIndex: 'nonVie', key: 'nonVie', align: 'center', render: (text) => <span className="font-medium text-blue-900">{text}</span> },
                   { title: 'Compagnie', dataIndex: 'compagnie', key: 'compagnie', align: 'center', render: (text) => <span className="font-medium text-blue-900">{text}</span> },
@@ -465,7 +517,7 @@ function SyntheseGlobale() {
           key: '1',
           label: (
             <span className="text-lg font-semibold text-zinc-900">
-              CA Non Vie du mois de Decembre au 10/12/2025 par branche et par BU
+              CA Non Vie du mois de {getCurrentMonthName()} au {getCurrentDate()} par branche et par BU
             </span>
           ),
           children: (
@@ -649,7 +701,7 @@ function SyntheseGlobale() {
           key: '1',
           label: (
             <span className="text-lg font-semibold text-zinc-900">
-              CA Vie du mois de Novembre au 25/11/2025 par branche et par BU
+              CA Vie du mois de {getCurrentMonthName()} au {getCurrentDate()} par branche et par BU
             </span>
           ),
           children: (
@@ -764,36 +816,411 @@ function SyntheseGlobale() {
                     }
                   },
                 ]}
-                dataSource={[
-                  {
-                    key: 'mac', bu: 'MAC',
-                    capCa: '548 128 521', capEvo: '109,04 %',
-                    retCa: '43 476 570', retEvo: '56,40 %',
-                    decesCa: '10 162 874', decesEvo: '75,56 %',
-                    totalCa: '601 767 965', totalEvo: '101,44 %'
-                  },
-                  {
-                    key: 'mcma', bu: 'MCMA',
-                    capCa: '29 608 463', capEvo: '68,42 %',
-                    retCa: '1 137 710', retEvo: '30,32 %',
-                    decesCa: '13 848 048', decesEvo: '169,72 %',
-                    totalCa: '44 594 222', totalEvo: '80,81 %'
-                  },
-                  {
-                    key: 'total', bu: 'Total',
-                    capCa: '577 736 985', capEvo: '105,82 %',
-                    retCa: '44 614 280', retEvo: '55,19 %',
-                    decesCa: '24 010 922', decesEvo: '111,11 %',
-                    totalCa: '646 362 187', totalEvo: '99,68 %'
-                  },
-                ]}
+                dataSource={caVieMensuelData.map((item, index) => ({
+                  key: item.mutuelle?.toLowerCase() || `row-${index}`,
+                  bu: item.mutuelle || '',
+                  capCa: item.capitalisation || '0',
+                  capEvo: item.tauxRemplissageCapitalisation || '0,00 %',
+                  retCa: item.retraite || '0',
+                  retEvo: item.tauxRemplissageRetraite || '0,00 %',
+                  decesCa: item.deces || '0',
+                  decesEvo: item.tauxRemplissageDeces || '0,00 %',
+                  totalCa: item.total || '0',
+                  totalEvo: item.tauxRemplissageTotal || '0,00 %'
+                }))}
                 rowClassName={(record) => record.key === 'total' ? 'bg-zinc-100 font-bold' : ''}
               />
             </div>
           )
         }]}
       />
+<Collapse
+  defaultActiveKey={['1']}
+  items={[{
+    key: '1',
+    label: (
+      <span className="text-lg font-semibold text-zinc-900">
+        CA Non Vie à fin de {getPreviousMonthNameAndYear()} par branche et par BU
+      </span>
+    ),
+    children: (
+      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm p-4">
+        <Table
+          className="rounded-xl overflow-hidden text-xs"
+          pagination={false}
+          columns={[
+            { 
+              title: 'BU', 
+              dataIndex: 'bu', 
+              key: 'bu', 
+              align: 'left',
+              render: (text, record) => 
+                <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-medium text-blue-900'}>{text}</span> 
+            },
+            { 
+              title: 'AUTO', 
+              children: [
+                { 
+                  title: 'CA', 
+                  dataIndex: 'auto', 
+                  key: 'auto', 
+                  align: 'right', 
+                  render: (text, record) => 
+                    <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> 
+                },
+                { 
+                  title: "Taux d'évolution", 
+                  dataIndex: 'tauxAuto', 
+                  key: 'tauxAuto', 
+                  align: 'right', 
+                  render: (text) => {
+                    const colorClass = getEvolutionColor(text);
+                    return <span className={`px-2 py-1 rounded font-bold ${colorClass}`}>{text}</span>;
+                  }
+                }
+              ]
+            },
+            { 
+              title: 'AT', 
+              children: [
+                { 
+                  title: 'CA', 
+                  dataIndex: 'at', 
+                  key: 'at', 
+                  align: 'right', 
+                  render: (text, record) => 
+                    <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> 
+                },
+                { 
+                  title: "Taux d'évolution", 
+                  dataIndex: 'tauxAt', 
+                  key: 'tauxAt', 
+                  align: 'right', 
+                  render: (text) => {
+                    const colorClass = getEvolutionColor(text);
+                    return <span className={`px-2 py-1 rounded font-bold ${colorClass}`}>{text}</span>;
+                  }
+                }
+              ]
+            },
+            { 
+              title: 'MALADIE', 
+              children: [
+                { 
+                  title: 'CA', 
+                  dataIndex: 'maladie', 
+                  key: 'maladie', 
+                  align: 'right', 
+                  render: (text, record) => 
+                    <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> 
+                },
+                { 
+                  title: "Taux d'évolution", 
+                  dataIndex: 'tauxMaladie', 
+                  key: 'tauxMaladie', 
+                  align: 'right', 
+                  render: (text) => {
+                    const colorClass = getEvolutionColor(text);
+                    return <span className={`px-2 py-1 rounded font-bold ${colorClass}`}>{text}</span>;
+                  }
+                }
+              ]
+            },
+            { 
+              title: 'DIVERS', 
+              children: [
+                { 
+                  title: 'CA', 
+                  dataIndex: 'divers', 
+                  key: 'divers', 
+                  align: 'right', 
+                  render: (text, record) => 
+                    <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-bold text-blue-900'}>{text}</span> 
+                },
+                { 
+                  title: "Taux d'évolution", 
+                  dataIndex: 'tauxDivers', 
+                  key: 'tauxDivers', 
+                  align: 'right', 
+                  render: (text) => {
+                    const colorClass = getEvolutionColor(text);
+                    return <span className={`px-2 py-1 rounded font-bold ${colorClass}`}>{text}</span>;
+                  }
+                }
+              ]
+            },
+            { 
+              title: 'Total', 
+              children: [
+                { 
+                  title: 'CA', 
+                  dataIndex: 'total', 
+                  key: 'total', 
+                  align: 'right', 
+                  render: (text, record) => 
+                    <span className={record.key === 'total' ? 'font-bold bg-blue-100 text-blue-900 px-1 py-0.5 rounded' : 'font-bold bg-blue-50 text-blue-900 px-1 py-0.5 rounded'}>{text}</span> 
+                },
+                { 
+                  title: "Taux d'évolution", 
+                  dataIndex: 'tauxTotal', 
+                  key: 'tauxTotal', 
+                  align: 'right', 
+                  render: (text) => {
+                    const colorClass = getEvolutionColor(text);
+                    return <span className={`px-2 py-1 rounded font-bold ${colorClass}`}>{text}</span>;
+                  }
+                }
+              ]
+            }
+          ]}
+          dataSource={(() => {
+            // Helper to format numbers with spaces (French format)
+            const format = n => {
+              if (!n && n !== 0) return '0';
+              const num = typeof n === 'string' ? parseFloat(n.replace(/\s/g, '')) : n;
+              return isNaN(num) ? '0' : Math.round(num).toLocaleString('fr-FR').replace(/,/g, ' ');
+            };
+            
+            // Helper to format percent with 2 decimals and %
+            const formatPercent = n => {
+              if (n === undefined || n === null) return '0,00 %';
+              const num = typeof n === 'string' ? parseFloat(n.replace(',', '.')) : n;
+              return isNaN(num) ? '0,00 %' : num.toFixed(2).replace('.', ',') + ' %';
+            };
+            
+            // Map API data to table rows
+            const rows = (caNonVieThisMonthData || []).map((item, idx) => ({
+              key: item.bu?.toLowerCase() || `row-${idx}`,
+              bu: item.bu || '',
+              auto: format(item.ca_auto_annee_courante),
+              tauxAuto: formatPercent(item.taux_auto),
+              at: format(item.ca_at_annee_courante),
+              tauxAt: formatPercent(item.taux_at),
+              maladie: format(item.ca_maladie_annee_courante),
+              tauxMaladie: formatPercent(item.taux_maladie),
+              divers: format(item.ca_divers_annee_courante),
+              tauxDivers: formatPercent(item.taux_divers),
+              total: format(item.ca_total_annee_courante),
+              tauxTotal: formatPercent(item.taux_total),
+            }));
+            
+            return rows;
+          })()}
+          rowClassName={(record) => record.key === 'total' ? 'bg-zinc-100 font-bold' : ''}
+        />
+      </div>
+    )
+  }]}
+/>
 
+<Collapse
+  defaultActiveKey={['1']}
+  items={[{
+    key: '1',
+    label: (
+      <span className="text-lg font-semibold text-zinc-900">
+        CA Vie à fin de {getPreviousMonthNameAndYear()} par branche et par BU
+       
+      </span>
+    ),
+    children: (
+      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm p-4">
+        {caVieThisMonthData && caVieThisMonthData.length > 0 ? (
+          <Table
+            className="rounded-xl overflow-hidden text-xs"
+            pagination={false}
+            columns={[
+              { 
+                title: 'BU', 
+                dataIndex: 'bu', 
+                key: 'bu', 
+                align: 'left',
+                render: (text, record) => 
+                  <span className={record.key === 'total' ? 'font-bold text-blue-900' : 'font-medium text-blue-900'}>{text}</span> 
+              },
+              { 
+                title: 'Capitalisation', 
+                children: [
+                  { 
+                    title: 'CA', 
+                    dataIndex: 'capitalisation', 
+                    key: 'capitalisation', 
+                    align: 'right', 
+                    render: (text) => <span className="font-bold text-blue-900">{text}</span> 
+                  },
+                  { 
+                    title: "Taux d'évolution", 
+                    dataIndex: 'tauxCapitalisation', 
+                    key: 'tauxCapitalisation', 
+                    align: 'right', 
+                    render: (text) => {
+                      const colorClass = getEvolutionColor(text);
+                      return <span className={`px-2 py-1 rounded font-bold ${colorClass}`}>{text}</span>;
+                    }
+                  }
+                ]
+              },
+              { 
+                title: 'Retraite', 
+                children: [
+                  { 
+                    title: 'CA', 
+                    dataIndex: 'retraite', 
+                    key: 'retraite', 
+                    align: 'right', 
+                    render: (text) => <span className="font-bold text-blue-900">{text}</span> 
+                  },
+                  { 
+                    title: "Taux d'évolution", 
+                    dataIndex: 'tauxRetraite', 
+                    key: 'tauxRetraite', 
+                    align: 'right', 
+                    render: (text) => {
+                      const colorClass = getEvolutionColor(text);
+                      return <span className={`px-2 py-1 rounded font-bold ${colorClass}`}>{text}</span>;
+                    }
+                  }
+                ]
+              },
+              { 
+                title: 'Décès', 
+                children: [
+                  { 
+                    title: 'CA', 
+                    dataIndex: 'deces', 
+                    key: 'deces', 
+                    align: 'right', 
+                    render: (text) => <span className="font-bold text-blue-900">{text}</span> 
+                  },
+                  { 
+                    title: "Taux d'évolution", 
+                    dataIndex: 'tauxDeces', 
+                    key: 'tauxDeces', 
+                    align: 'right', 
+                    render: (text) => {
+                      const colorClass = getEvolutionColor(text);
+                      return <span className={`px-2 py-1 rounded font-bold ${colorClass}`}>{text}</span>;
+                    }
+                  }
+                ]
+              },
+              { 
+                title: 'Total', 
+                children: [
+                  { 
+                    title: 'CA', 
+                    dataIndex: 'total', 
+                    key: 'total', 
+                    align: 'right', 
+                    render: (text, record) => 
+                      <span className={record.key === 'total' ? 'font-bold bg-blue-100 text-blue-900 px-1 py-0.5 rounded' : 'font-bold bg-blue-50 text-blue-900 px-1 py-0.5 rounded'}>{text}</span> 
+                  },
+                  { 
+                    title: "Taux d'évolution", 
+                    dataIndex: 'tauxTotal', 
+                    key: 'tauxTotal', 
+                    align: 'right', 
+                    render: (text) => {
+                      const colorClass = getEvolutionColor(text);
+                      return <span className={`px-2 py-1 rounded font-bold ${colorClass}`}>{text}</span>;
+                    }
+                  }
+                ]
+              }
+            ]}
+            dataSource={(() => {
+              // Log pour déboguer
+              console.log('Données de l\'API caVieThisMonthData:', caVieThisMonthData);
+              
+              if (!caVieThisMonthData || caVieThisMonthData.length === 0) {
+                console.log('Aucune donnée API disponible');
+                return [];
+              }
+
+              // Fonction pour formater les nombres (format français avec espaces)
+              const formatNumber = (num) => {
+                if (num === null || num === undefined) return '0';
+                const value = parseFloat(num);
+                return isNaN(value) ? '0' : Math.round(value).toLocaleString('fr-FR').replace(/,/g, ' ');
+              };
+
+              // Fonction pour formater les pourcentages
+              const formatPercentage = (value) => {
+                if (value === null || value === undefined) return '0,00 %';
+                const num = parseFloat(value);
+                return isNaN(num) ? '0,00 %' : num.toFixed(2).replace('.', ',') + ' %';
+              };
+
+              // Calculer les totaux
+              let totalCapitalisation = 0;
+              let totalRetraite = 0;
+              let totalDeces = 0;
+              let totalGeneral = 0;
+              
+              // D'abord, calculer les totaux
+              caVieThisMonthData.forEach(item => {
+                if (item.bu !== 'TOTAL') {
+                  totalCapitalisation += parseFloat(item.caCapitalisation || 0);
+                  totalRetraite += parseFloat(item.caRetr || 0);
+                  totalDeces += parseFloat(item.caDeces || 0);
+                }
+              });
+              
+              totalGeneral = totalCapitalisation + totalRetraite + totalDeces;
+              
+              // Calculer les taux moyens pondérés
+              const tauxMoyenCapitalisation = caVieThisMonthData.length > 0 
+                ? caVieThisMonthData.reduce((sum, item) => sum + parseFloat(item.tauxCapitalisation || 0), 0) / caVieThisMonthData.length
+                : 0;
+                
+              const tauxMoyenRetraite = caVieThisMonthData.length > 0
+                ? caVieThisMonthData.reduce((sum, item) => sum + parseFloat(item.tauxRetr || 0), 0) / caVieThisMonthData.length
+                : 0;
+                
+              const tauxMoyenDeces = caVieThisMonthData.length > 0
+                ? caVieThisMonthData.reduce((sum, item) => sum + parseFloat(item.tauxDeces || 0), 0) / caVieThisMonthData.length
+                : 0;
+                
+              const tauxMoyenTotal = caVieThisMonthData.length > 0
+                ? caVieThisMonthData.reduce((sum, item) => sum + parseFloat(item.tauxTotal || 0), 0) / caVieThisMonthData.length
+                : 0;
+
+              // Créer les lignes du tableau
+              const rows = caVieThisMonthData
+                .filter(item => item.bu && item.bu !== 'TOTAL') // Exclure le total s'il existe déjà dans l'API
+                .map((item, index) => ({
+                  key: item.bu?.toLowerCase() || `row-${index}`,
+                  bu: item.bu || '',
+                  capitalisation: formatNumber(item.caCapitalisation),
+                  tauxCapitalisation: formatPercentage(item.tauxCapitalisation),
+                  retraite: formatNumber(item.caRetr),
+                  tauxRetraite: formatPercentage(item.tauxRetr),
+                  deces: formatNumber(item.caDeces),
+                  tauxDeces: formatPercentage(item.tauxDeces),
+                  total: formatNumber((parseFloat(item.caCapitalisation || 0) + parseFloat(item.caRetr || 0) + parseFloat(item.caDeces || 0))),
+                  tauxTotal: formatPercentage(item.tauxTotal),
+                }));
+
+
+              console.log('Données formatées pour le tableau:', rows);
+              return rows;
+            })()}
+            rowClassName={(record) => record.key === 'total' ? 'bg-zinc-100 font-bold' : ''}
+          />
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-lg text-blue-900 font-semibold mb-2">
+              Chargement des données...
+            </div>
+            <div className="text-sm text-gray-600">
+              Les données du CA Vie sont en cours de chargement.
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }]}
+/>
 
     </div>
   );

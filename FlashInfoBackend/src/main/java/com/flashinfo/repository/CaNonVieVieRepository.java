@@ -5,12 +5,12 @@ import org.springframework.data.jpa.repository.Query;
 
 import org.springframework.stereotype.Repository;
 
-import com.flashinfo.entity.CaNonVieVie;
+import com.flashinfo.entity.CaNonVie;
 
 import java.util.List;
 
 @Repository
-public interface CaNonVieVieRepository extends JpaRepository<CaNonVieVie, Long> {
+public interface CaNonVieVieRepository extends JpaRepository<CaNonVie, Long> {
     
     //#FIXME: Non Vie CA Synthèse Today
     @Query(value = "SELECT BU, AUTO, AT, MALADIE, DIVERS " +

@@ -13,14 +13,14 @@ import java.util.List;
 public interface ChiffreAffairesMapper {
     
     @Mapping(target = "type", source = "typeAssurance", qualifiedByName = "typeToString")
-    @Mapping(target = "ca25112025", source = "primeJN", qualifiedByName = "formatCurrency")
-    @Mapping(target = "caNov2025", source = "primetotaleN", qualifiedByName = "formatCurrency")
-    @Mapping(target = "caNov2024", source = "primetotaleN1", qualifiedByName = "formatCurrency")
+    @Mapping(target = "caDuJour", source = "primeJN", qualifiedByName = "formatCurrency")
+    @Mapping(target = "caMoisActuel", source = "primetotaleN", qualifiedByName = "formatCurrency")
+    @Mapping(target = "caMoisAnneePrecedente", source = "primetotaleN1", qualifiedByName = "formatCurrency")
     @Mapping(target = "tauxRemplissage", source = "tauxRemplissageN", qualifiedByName = "formatPercentage")
     @Mapping(target = "ytdCa", source = "primetotaleYD", qualifiedByName = "formatCurrency")
     @Mapping(target = "ytdEvolution", source = "tauxEvolutionYD", qualifiedByName = "formatPercentage")
-    @Mapping(target = "caOct2025", source = "primetotaleMPN", qualifiedByName = "formatCurrency")
-    @Mapping(target = "evolutionOct2025", source = "tauxEvolutionMP", qualifiedByName = "formatPercentage")
+    @Mapping(target = "caMoisPrecedent", source = "primetotaleMPN", qualifiedByName = "formatCurrency")
+    @Mapping(target = "evolutionMoisPrecedent", source = "tauxEvolutionMP", qualifiedByName = "formatPercentage")
     @Mapping(target = "key", source = "typeAssurance", qualifiedByName = "typeToKey")
     ChiffreAffairesDto toDto(ChiffreAffaires entity);
     
@@ -57,21 +57,21 @@ public interface ChiffreAffairesMapper {
     /**
      * Crée un DTO pour le total calculé
      */
-    default ChiffreAffairesDto createTotalDto(BigDecimal totalCa25112025, BigDecimal totalCaNov2025, 
-                                            BigDecimal totalCaNov2024, BigDecimal totalYtdCa, 
-                                            BigDecimal totalCaOct2025, BigDecimal tauxRemplissage,
-                                            BigDecimal ytdEvolution, BigDecimal evolutionOct2025) {
+    default ChiffreAffairesDto createTotalDto(BigDecimal totalCaDuJour, BigDecimal totalCaMoisActuel, 
+                                            BigDecimal totalCaMoisAnneePrecedente, BigDecimal totalYtdCa, 
+                                            BigDecimal totalCaMoisPrecedent, BigDecimal tauxRemplissage,
+                                            BigDecimal ytdEvolution, BigDecimal evolutionMoisPrecedent) {
         return ChiffreAffairesDto.builder()
             .key("total")
             .type("Total")
-            .ca25112025(formatCurrency(totalCa25112025))
-            .caNov2025(formatCurrency(totalCaNov2025))
-            .caNov2024(formatCurrency(totalCaNov2024))
+            .caDuJour(formatCurrency(totalCaDuJour))
+            .caMoisActuel(formatCurrency(totalCaMoisActuel))
+            .caMoisAnneePrecedente(formatCurrency(totalCaMoisAnneePrecedente))
             .tauxRemplissage(formatPercentage(tauxRemplissage))
             .ytdCa(formatCurrency(totalYtdCa))
             .ytdEvolution(formatPercentage(ytdEvolution))
-            .caOct2025(formatCurrency(totalCaOct2025))
-            .evolutionOct2025(formatPercentage(evolutionOct2025))
+            .caMoisPrecedent(formatCurrency(totalCaMoisPrecedent))
+            .evolutionMoisPrecedent(formatPercentage(evolutionMoisPrecedent))
             .build();
     }
 }

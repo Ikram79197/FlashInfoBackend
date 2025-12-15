@@ -1,7 +1,9 @@
 package com.flashinfo.controller;
 
-import com.flashinfo.dto.CaMensuelDto;
-import com.flashinfo.service.CaNoVieMensuelService;
+import com.flashinfo.dto.CaMensuelNonVieDto;
+import com.flashinfo.dto.CaMensuelVieDto;
+import com.flashinfo.service.CaMensuelService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -17,12 +19,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CaNoVieVieMensuelController {
 
-    private final CaNoVieMensuelService caMensuelService;
+    private final CaMensuelService caMensuelService;
 
     @GetMapping("/ca-non-vie-mensuel")
-    public ResponseEntity<List<CaMensuelDto>> getCaNonVieMensuel() {
+    public ResponseEntity<List<CaMensuelNonVieDto>> getCaNonVieMensuel() {
         try {
-            List<CaMensuelDto> caNonVieMensuel = caMensuelService.getCaNonVieMensuel();
+            List<CaMensuelNonVieDto> caNonVieMensuel = caMensuelService.getCaNonVieMensuel();
             return ResponseEntity.ok(caNonVieMensuel);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
@@ -30,9 +32,9 @@ public class CaNoVieVieMensuelController {
     }
 
     @GetMapping("/ca-vie-mensuel")
-    public ResponseEntity<List<CaMensuelDto>> getCaVieMensuel() {
+    public ResponseEntity<List<CaMensuelVieDto>> getCaVieMensuel() {
         try {
-            List<CaMensuelDto> caVieMensuel = caMensuelService.getCaVieMensuel();
+            List<CaMensuelVieDto> caVieMensuel = caMensuelService.getCaVieMensuel();
             return ResponseEntity.ok(caVieMensuel);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();

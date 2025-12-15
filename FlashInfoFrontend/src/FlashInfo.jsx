@@ -67,42 +67,62 @@ export default function FlashInfo() {
 		const [loading, setLoading] = useState(true);
 		const [error, setError] = useState(null);
 
-		// Chargement des données depuis le backend
-		useEffect(() => {
-			const fetchData = async () => {
-				try {
-					setLoading(true);
-					const result = await getAllChiffreAffaires();
-					setData(result);
-					setError(null);
-				} catch (err) {
-					console.error('Erreur lors du chargement des données:', err);
-					setError(err.message);
-					setData([]); // Pas de données de fallback, utiliser seulement la base de données
-				} finally {
-					setLoading(false);
-				}
-			};
+	// Chargement des données depuis le backend
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				setLoading(true);
+				const result = await getAllChiffreAffaires();
+				setData(result);
+				setError(null);
+			} catch (err) {
+				console.error('Erreur lors du chargement des données:', err);
+				setError(err.message);
+				setData([]); // Pas de données de fallback, utiliser seulement la base de données
+			} finally {
+				setLoading(false);
+			}
+		};
 
-			fetchData();
-		}, []);
+		// Charger les données immédiatement
+		fetchData();
 
+		// Rafraîchir les données toutes les 5 minutes (300000 ms)
+		const interval = setInterval(fetchData, 300000);
 
+		// Nettoyer l'intervalle lors du démontage du composant
+		return () => clearInterval(interval);
+	}, []);
 
-		// Colonnes pour le tableau combiné
-		const combinedColumns = [
-			{ title: '', dataIndex: 'type', key: 'type', width: 100, render: (text, record) => <span style={{fontWeight:700, color:'#1e3a8a'}}>{record.type}</span> },
-			{ title: "CA du 07/12/2025", dataIndex: "ca_25_11_2025", width: 140, align: 'right', render: (text, record) => <span style={{fontWeight:700, color:'#1e3a8a', whiteSpace: 'nowrap'}}>{record.ca_25_11_2025 ? record.ca_25_11_2025 : ''}</span> },
-			{ title: "CA du mois de Décembre arrêté au 07/12/2025", dataIndex: "ca_nov_2025", width: 200, align: 'right', render: (text) => <span style={{fontWeight:700, color:'#1e3a8a', whiteSpace: 'nowrap'}}>{text}</span> },
-			{ title: "CA du mois de Décembre 2024", dataIndex: "ca_nov_2024", width: 160, align: 'right', render: (text) => <span style={{fontWeight:700, color:'#1e3a8a', whiteSpace: 'nowrap'}}>{text}</span> },
-			{ title: "Taux de remplissage 2025 %", dataIndex: "taux_remplissage", width: 140, align: 'right', render: (text) => <span style={getEvolutionStyle(text)}>{text}</span> },
-			{ title: "Year to Date (C.A)", dataIndex: "ytd_ca", width: 180, align: 'right', render: (text) => <span style={{fontWeight:700, color:'#1e3a8a', whiteSpace: 'nowrap', display: 'block'}}>{text}</span> },
-			{ title: "Year to Date (Évolution %)", dataIndex: "ytd_evolution", width: 160, align: 'right', render: (text) => <span style={getEvolutionStyle(text)}>{text}</span> },
-			{ title: "CA du mois de nov. 2025", dataIndex: "ca_oct_2025", width: 160, align: 'right', render: (text) => <span style={{fontWeight:700, color:'#1e3a8a', whiteSpace: 'nowrap'}}>{text}</span> },
-			{ title: "Évolution % du mois de nov. 2025", dataIndex: "evolution_oct_2025", width: 180, align: 'right', render: (text) => <span style={getEvolutionStyle(text)}>{text}</span> },
-		];
-
-		// Les données sont maintenant chargées depuis le backend via useEffect
+	// Fonctions pour obtenir les dates dynamiques
+	const getCurrentDate = () => {
+		const today = new Date();
+		// Soustraire 1 jour pour obtenir J-1
+		today.setDate(today.getDate() - 1);
+		return today.toLocaleDateString('fr-FR');
+	};
+	const getCurrentMonthName = () => {
+		const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+		const today = new Date();
+		// Soustraire 1 jour pour obtenir J-1
+		today.setDate(today.getDate() - 1);
+		return months[today.getMonth()];
+	};
+	const getPreviousYear = () => new Date().getFullYear() - 1;
+	const getCurrentYear = () => new Date().getFullYear();
+	
+	// Colonnes pour le tableau combiné
+	const combinedColumns = [
+		{ title: '', dataIndex: 'type', key: 'type', width: 100, render: (text, record) => <span style={{fontWeight:700, color:'#1e3a8a'}}>{record.type}</span> },
+		{ title: `CA du ${getCurrentDate()}`, dataIndex: "ca_du_jour", width: 140, align: 'right', render: (text, record) => <span style={{fontWeight:700, color:'#1e3a8a', whiteSpace: 'nowrap'}}>{record.ca_du_jour ? record.ca_du_jour : ''}</span> },
+		{ title: `CA du mois de ${getCurrentMonthName().charAt(0).toUpperCase() + getCurrentMonthName().slice(1)} arrêté au ${getCurrentDate()}`, dataIndex: "ca_mois_actuel", width: 200, align: 'right', render: (text) => <span style={{fontWeight:700, color:'#1e3a8a', whiteSpace: 'nowrap'}}>{text}</span> },
+		{ title: `CA du mois de ${getCurrentMonthName().charAt(0).toUpperCase() + getCurrentMonthName().slice(1)} ${getPreviousYear()}`, dataIndex: "ca_mois_annee_precedente", width: 160, align: 'right', render: (text) => <span style={{fontWeight:700, color:'#1e3a8a', whiteSpace: 'nowrap'}}>{text}</span> },
+		{ title: `Taux de remplissage ${getCurrentYear()} %`, dataIndex: "taux_remplissage", width: 140, align: 'right', render: (text) => <span style={getEvolutionStyle(text)}>{text}</span> },
+		{ title: "Year to Date (C.A)", dataIndex: "ytd_ca", width: 180, align: 'right', render: (text) => <span style={{fontWeight:700, color:'#1e3a8a', whiteSpace: 'nowrap', display: 'block'}}>{text}</span> },
+		{ title: "Year to Date (Évolution %)", dataIndex: "ytd_evolution", width: 160, align: 'right', render: (text) => <span style={getEvolutionStyle(text)}>{text}</span> },
+		{ title: `CA du mois de ${getCurrentMonthName()} ${getCurrentYear()}`, dataIndex: "ca_mois_precedent", width: 160, align: 'right', render: (text) => <span style={{fontWeight:700, color:'#1e3a8a', whiteSpace: 'nowrap'}}>{text}</span> },
+		{ title: `Évolution % du mois de ${getCurrentMonthName()} ${getCurrentYear()}`, dataIndex: "evolution_mois_precedent", width: 180, align: 'right', render: (text) => <span style={getEvolutionStyle(text)}>{text}</span> },
+	];		// Les données sont maintenant chargées depuis le backend via useEffect
 		// Fonction pour trouver une donnée par type
 		const findDataByKey = (key) => data.find(item => item.key === key);
 		
@@ -123,7 +143,7 @@ export default function FlashInfo() {
 				{/* Header */}
 				<div style={{ textAlign: 'center', marginBottom: 16 }}>
 					<div style={{ fontSize: 28, fontWeight: 700, color: '#1677ff', marginBottom: 8 }}>Flash Info</div>
-					<div style={{ fontSize: 18, color: '#64748b', marginBottom: 8 }}>Résumé du chiffre d'affaires global au 25/11/2025</div>
+					<div style={{ fontSize: 18, color: '#64748b', marginBottom: 8 }}>Résumé du chiffre d'affaires global au {getCurrentDate()}</div>
 					<div style={{ height: 2, background: 'linear-gradient(90deg, #1677ff 0%, #f472b6 100%)', margin: '0 auto 24px', width: 320 }} />
 				</div>
 
@@ -199,9 +219,9 @@ export default function FlashInfo() {
 						onClick={() => setSelectedCard(selectedCard === 'non-vie' ? null : 'non-vie')}
 					>
 					<div style={{ marginBottom: 16 }}>
-						<div style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>CA au 25/11/2025</div>
+						<div style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>CA au {getCurrentDate()}</div>
 						<div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
-							{loading ? 'Chargement...' : (nonVieData?.ca_25_11_2025 || '0,00')}
+							{loading ? 'Chargement...' : (nonVieData?.ca_du_jour || '0,00')}
 						</div>
 					</div>
 					<div style={{ marginBottom: 16 }}>
@@ -234,9 +254,9 @@ export default function FlashInfo() {
 						onClick={() => setSelectedCard(selectedCard === 'vie' ? null : 'vie')}
 					>
 				<div style={{ marginBottom: 16 }}>
-					<div style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>CA au 25/11/2025</div>
+					<div style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>CA au {getCurrentDate()}</div>
 					<div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>
-						{loading ? 'Chargement...' : (vieData?.ca_25_11_2025 || '0,00')}
+						{loading ? 'Chargement...' : (vieData?.ca_du_jour || '0,00')}
 					</div>
 				</div>
 				<div style={{ marginBottom: 16 }}>
@@ -269,9 +289,9 @@ export default function FlashInfo() {
 						onClick={() => setSelectedCard(selectedCard === 'total' ? null : 'total')}
 					>
 						<div style={{ marginBottom: 16 }}>
-					<div style={{ fontSize: 13, color: '#dbeafe', fontWeight: 500 }}>CA Total au 25/11/2025</div>
+					<div style={{ fontSize: 13, color: '#dbeafe', fontWeight: 500 }}>CA Total au {getCurrentDate()}</div>
 					<div style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>
-						{loading ? 'Chargement...' : (totalData?.ca_25_11_2025 || '0,00')}
+						{loading ? 'Chargement...' : (totalData?.ca_du_jour || '0,00')}
 					</div>
 						</div>
 						<div style={{ marginBottom: 16 }}>

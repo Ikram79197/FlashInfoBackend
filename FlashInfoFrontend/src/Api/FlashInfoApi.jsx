@@ -100,3 +100,16 @@ export function getEmissions500KDHS() {
         method: "GET"
     });
 }
+export function getCaNonVieThisMonth() {
+    return REQUEST_UC({
+        url: API_PRODUCTION_URL + "/ca-non-vie-this-month",
+        method: "GET"
+    });
+}
+
+export function getCaVieThisMonth() {
+    return REQUEST_UC({
+        url: API_PRODUCTION_URL + "/vie-this-month",
+        method: "GET"
+    });
+}
