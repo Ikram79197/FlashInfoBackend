@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import { Button } from "antd";
 import { Layout, Menu, Drawer } from "antd";
 import {
   DashboardOutlined,
@@ -8,10 +8,11 @@ import {
   SettingOutlined,
   MenuOutlined,
   CloseOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 const { Sider } = Layout;
 
-export default function Sidebar({ selectedKey, onSelect }) {
+export default function Sidebar({ selectedKey, onSelect, onLogout }) {
   const [drawerVisible, setDrawerVisible] = useState(true);
 
   return (
@@ -81,6 +82,23 @@ export default function Sidebar({ selectedKey, onSelect }) {
                 },
               ]}
             />
+          </div>
+
+          {/* Logout Button */}
+          <div className="border-t border-gray-100 p-4">
+            <Button
+              type="primary"
+              danger
+              block
+              icon={<LogoutOutlined />}
+              onClick={() => {
+                setDrawerVisible(false);
+                if (onLogout) onLogout();
+              }}
+              className="font-medium"
+            >
+              Déconnexion
+            </Button>
           </div>
         </div>
       </Drawer>

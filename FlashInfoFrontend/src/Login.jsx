@@ -1,11 +1,12 @@
 import { EyeOutlined, EyeInvisibleOutlined, UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Form, Input, Button, Checkbox, Alert } from 'antd';
 import React, { useState } from 'react';
+import { authLogin } from './Api/FlashInfoApi';
 import logoMamdaMcma from './assets/MamdaMcma_Logo instit.png';
 import backgroundGraph from './assets/coin.png';
 import './Login.css';
 
-const Login = ({ onLogin }) => {
+const Login = ({ onLogin, onOtpRequired }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -15,12 +16,43 @@ const Login = ({ onLogin }) => {
     setError('');
     
     try {
-      // Simuler un délai de connexion
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (onLogin) onLogin();
+      const { username, password } = values;
+      if (!username || !password) {
+        setError('Veuillez fournir le nom d\'utilisateur et le mot de passe.');
+        setLoading(false);
+        return;
+      }
+
+      const resp = await authLogin(username, password);
+      // resp should contain token and expiresInMs
+      if (resp && resp.token) {
+        localStorage.setItem('flashinfo_token', resp.token);
+        // Get user email and phone from response for OTP verification
+        const userEmail = resp.email || '';
+        const userPhone = resp.phone || '';
+        
+        // Show OTP verification page instead of logging in directly
+        if (onOtpRequired) {
+          onOtpRequired({
+            token: resp.token,
+            email: userEmail,
+            phone: userPhone,
+            username: username
+          });
+        } else if (onLogin) {
+          onLogin(resp.token);
+        }
+      } else {
+        setError('Réponse inattendue du serveur.');
+      }
     } catch (err) {
-      setError('Erreur de connexion. Veuillez réessayer.');
+      // If the request returned a 401, present a user-friendly message
+      if (err && err.status === 401) {
+        setError("Nom d'utilisateur ou mot de passe incorrect.");
+      } else {
+        const msg = (err && err.message) ? err.message : 'Erreur de connexion. Veuillez réessayer.';
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -113,9 +145,6 @@ const Login = ({ onLogin }) => {
                 <Form.Item
                   name="username"
                   label="Nom d'utilisateur"
-                  rules={[
-                    { required: true, message: 'Veuillez saisir votre nom d\'utilisateur!' }
-                  ]}
                 >
                   <Input
                     prefix={<UserOutlined style={{ color: '#951b81' }} />}
@@ -127,9 +156,6 @@ const Login = ({ onLogin }) => {
                 <Form.Item
                   name="password"
                   label="Mot de passe"
-                  rules={[
-                    { required: true, message: 'Veuillez saisir votre mot de passe!' }
-                  ]}
                 >
                   <Input.Password
                     prefix={<LockOutlined style={{ color: '#951b81' }} />}
@@ -162,26 +188,6 @@ const Login = ({ onLogin }) => {
                 </Form.Item>
               </Form>
             </div>
-
-            <div className="divider-section">
-              <div className="divider-line">
-                <div className="divider-border"></div>
-              </div>
-              <div className="divider-content">
-                <span className="divider-text">
-                  Ou continuer avec
-                </span>
-              </div>
-            </div>
-
-            <div className="signup-section">
-              <p className="signup-text">
-                Vous n'avez pas de compte ?{' '}
-                <a href="#" className="signup-link">
-                  S'inscrire
-                </a>
-              </p>
-            </div>
           </div>
         </div>
       </div>
@@ -190,3 +196,4 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
+

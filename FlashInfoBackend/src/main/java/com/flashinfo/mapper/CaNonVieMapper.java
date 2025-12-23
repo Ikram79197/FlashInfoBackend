@@ -1,28 +1,17 @@
 package com.flashinfo.mapper;
 
 import com.flashinfo.dto.CaNonVieVieDto;
-import com.flashinfo.entity.CaNonVie;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface CaNonVieMapper {
     
-    @Mapping(source = "bu", target = "bu")
-    @Mapping(source = "auto", target = "auto", qualifiedByName = "roundToInteger")
-    @Mapping(source = "at", target = "at", qualifiedByName = "roundToInteger")
-    @Mapping(source = "maladie", target = "maladie", qualifiedByName = "roundToInteger")
-    @Mapping(source = "divers", target = "divers", qualifiedByName = "roundToInteger")
-    @Mapping(target = "vie", constant = "0")
-    @Mapping(source = "total", target = "total", qualifiedByName = "roundToInteger")
-    CaNonVieVieDto toDto(CaNonVie entity);
-    
-    List<CaNonVieVieDto> toDtoList(List<CaNonVie> entities);
+    // Cette méthode n'est plus utilisée si tu n'as pas d'Entity
+    // Tu peux la supprimer ou la garder pour d'autres usages
     
     @Named("roundToInteger")
     default BigDecimal roundToInteger(BigDecimal value) {

@@ -24,10 +24,7 @@ export function getChiffreAffairesByType(type) {
     });
 }
 
-/**
- * Récupère la synthèse Vie avec les données J-1 et les totaux
- * @returns {Promise<Array>} Liste des données de synthèse Vie par BU avec totaux
- */
+
 export function getSyntheseVie() {
     return REQUEST_UC({
         url: API_PRODUCTION_URL + "/synthese-vie",
@@ -35,10 +32,7 @@ export function getSyntheseVie() {
     });
 }
 
-/**
- * Récupère la synthèse globale (Vie + Non Vie) avec les données J-1 et les totaux
- * @returns {Promise<Array>} Liste des données de synthèse globale par type et BU avec totaux
- */
+
 export function getSyntheseGlobale() {
     return REQUEST_UC({
         url: API_PRODUCTION_URL + "/synthese-vie/globale",
@@ -46,10 +40,7 @@ export function getSyntheseGlobale() {
     });
 }
 
-/**
- * Récupère les données CA Vie avec les totaux calculés
- * @returns {Promise<Array>} Liste des données CA Vie avec totaux
- */
+
 export function getCaVie() {
     return REQUEST_UC({
         url: API_PRODUCTION_URL + "/synthese-vie",
@@ -57,10 +48,7 @@ export function getCaVie() {
     });
 }
 
-/**
- * Récupère les données CA Non Vie avec les totaux calculés
- * @returns {Promise<Array>} Liste des données CA Non Vie avec totaux
- */
+
 export function getCaNonVie() {
     return REQUEST_UC({
         url: API_PRODUCTION_URL + "/synthese-non-vie",
@@ -68,10 +56,7 @@ export function getCaNonVie() {
     });
 }
 
-/**
- * Récupère les données CA Vie mensuel
- * @returns {Promise<Array>} Liste des données CA Vie mensuel
- */
+
 export function getCaVieMensuel() {
     return REQUEST_UC({
         url: API_PRODUCTION_URL + "/ca-vie-mensuel",
@@ -79,10 +64,7 @@ export function getCaVieMensuel() {
     });
 }
 
-/**
- * Récupère les données CA Non Vie mensuel
- * @returns {Promise<Array>} Liste des données CA Non Vie mensuel
- */
+
 export function getCaNonVieMensuel() {
     return REQUEST_UC({
         url: API_PRODUCTION_URL + "/ca-non-vie-mensuel",
@@ -90,10 +72,7 @@ export function getCaNonVieMensuel() {
     });
 }
 
-/**
- * Récupère les émissions supérieures à 500 KDHS
- * @returns {Promise<Array>} Liste des émissions supérieures à 500 KDHS
- */
+
 export function getEmissions500KDHS() {
     return REQUEST_UC({
         url: API_PRODUCTION_URL + "/emission500kdhs",
@@ -111,5 +90,33 @@ export function getCaVieThisMonth() {
     return REQUEST_UC({
         url: API_PRODUCTION_URL + "/vie-this-month",
         method: "GET"
+    });
+}
+
+export function getCaNonVieExercice() {
+    return REQUEST_UC({
+        url: API_PRODUCTION_URL + "/ca-non-vie-exercice",
+        method: "GET"
+    });
+}
+
+export function getCaVieExercice() {
+    return REQUEST_UC({
+        url: API_PRODUCTION_URL + "/ca-vie-exercice",
+        method: "GET"
+    });
+}
+
+/**
+ * Authenticate user and return JWT
+ * @param {string} username
+ * @param {string} password
+ * @returns {Promise<Object>} { token, expiresInMs }
+ */
+export function authLogin(username, password) {
+    return REQUEST_UC({
+        url: API_PRODUCTION_URL + "/auth/login",
+        method: "POST",
+        data: { username, password }
     });
 }

@@ -13,14 +13,14 @@ import java.util.List;
 public interface ChiffreAffairesMapper {
     
     @Mapping(target = "type", source = "typeAssurance", qualifiedByName = "typeToString")
-    @Mapping(target = "caDuJour", source = "primeJN", qualifiedByName = "formatCurrency")
-    @Mapping(target = "caMoisActuel", source = "primetotaleN", qualifiedByName = "formatCurrency")
-    @Mapping(target = "caMoisAnneePrecedente", source = "primetotaleN1", qualifiedByName = "formatCurrency")
-    @Mapping(target = "tauxRemplissage", source = "tauxRemplissageN", qualifiedByName = "formatPercentage")
-    @Mapping(target = "ytdCa", source = "primetotaleYD", qualifiedByName = "formatCurrency")
-    @Mapping(target = "ytdEvolution", source = "tauxEvolutionYD", qualifiedByName = "formatPercentage")
-    @Mapping(target = "caMoisPrecedent", source = "primetotaleMPN", qualifiedByName = "formatCurrency")
-    @Mapping(target = "evolutionMoisPrecedent", source = "tauxEvolutionMP", qualifiedByName = "formatPercentage")
+    @Mapping(target = "caDuJour", source = "primeJN")
+    @Mapping(target = "caMoisActuel", source = "primetotaleN")
+    @Mapping(target = "caMoisAnneePrecedente", source = "primetotaleN1")
+    @Mapping(target = "tauxRemplissage", source = "tauxRemplissageN")
+    @Mapping(target = "ytdCa", source = "primetotaleYD")
+    @Mapping(target = "ytdEvolution", source = "tauxEvolutionYD")
+    @Mapping(target = "caMoisPrecedent", source = "primetotaleMPN")
+    @Mapping(target = "evolutionMoisPrecedent", source = "tauxEvolutionMP")
     @Mapping(target = "key", source = "typeAssurance", qualifiedByName = "typeToKey")
     ChiffreAffairesDto toDto(ChiffreAffaires entity);
     
@@ -39,15 +39,7 @@ public interface ChiffreAffairesMapper {
         };
     }
     
-    @Named("formatCurrency")
-    default String formatCurrency(BigDecimal amount) {
-        return ChiffreAffairesDto.formatCurrency(amount);
-    }
-    
-    @Named("formatPercentage")
-    default String formatPercentage(BigDecimal percentage) {
-        return ChiffreAffairesDto.formatPercentage(percentage);
-    }
+    // Currency/percentage formatting removed: DTO now exposes raw numeric values (BigDecimal)
     
     /**
      * Mappe une liste d'entités vers une liste de DTOs
@@ -64,14 +56,14 @@ public interface ChiffreAffairesMapper {
         return ChiffreAffairesDto.builder()
             .key("total")
             .type("Total")
-            .caDuJour(formatCurrency(totalCaDuJour))
-            .caMoisActuel(formatCurrency(totalCaMoisActuel))
-            .caMoisAnneePrecedente(formatCurrency(totalCaMoisAnneePrecedente))
-            .tauxRemplissage(formatPercentage(tauxRemplissage))
-            .ytdCa(formatCurrency(totalYtdCa))
-            .ytdEvolution(formatPercentage(ytdEvolution))
-            .caMoisPrecedent(formatCurrency(totalCaMoisPrecedent))
-            .evolutionMoisPrecedent(formatPercentage(evolutionMoisPrecedent))
+            .caDuJour(totalCaDuJour)
+            .caMoisActuel(totalCaMoisActuel)
+            .caMoisAnneePrecedente(totalCaMoisAnneePrecedente)
+            .tauxRemplissage(tauxRemplissage)
+            .ytdCa(totalYtdCa)
+            .ytdEvolution(ytdEvolution)
+            .caMoisPrecedent(totalCaMoisPrecedent)
+            .evolutionMoisPrecedent(evolutionMoisPrecedent)
             .build();
     }
 }

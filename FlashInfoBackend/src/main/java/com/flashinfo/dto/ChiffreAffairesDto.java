@@ -21,40 +21,29 @@ public class ChiffreAffairesDto {
     private String type;
     
     @JsonProperty("ca_du_jour")
-    private String caDuJour;
+    private java.math.BigDecimal caDuJour;
     
     @JsonProperty("ca_mois_actuel")
-    private String caMoisActuel;
+    private java.math.BigDecimal caMoisActuel;
     
     @JsonProperty("ca_mois_annee_precedente")
-    private String caMoisAnneePrecedente;
+    private java.math.BigDecimal caMoisAnneePrecedente;
     
     @JsonProperty("taux_remplissage")
-    private String tauxRemplissage;
+    private java.math.BigDecimal tauxRemplissage;
     
     @JsonProperty("ytd_ca")
-    private String ytdCa;
+    private java.math.BigDecimal ytdCa;
     
     @JsonProperty("ytd_evolution")
-    private String ytdEvolution;
+    private java.math.BigDecimal ytdEvolution;
     
     @JsonProperty("ca_mois_precedent")
-    private String caMoisPrecedent;
+    private java.math.BigDecimal caMoisPrecedent;
     
     @JsonProperty("evolution_mois_precedent")
-    private String evolutionMoisPrecedent;
+    private java.math.BigDecimal evolutionMoisPrecedent;
     
-    // Méthodes utilitaires pour la conversion des nombres
-    public static String formatCurrency(BigDecimal amount) {
-        if (amount == null) return "0,00";
-        return String.format("%,.2f", amount)
-            .replace(',', ' ')
-            .replace('.', ',');
-    }
-    
-    public static String formatPercentage(BigDecimal percentage) {
-        if (percentage == null) return "0,00 %";
-        return String.format("%.2f %%", percentage)
-            .replace('.', ',');
-    }
+    // Note: numeric fields are returned as raw numbers (BigDecimal). If formatted strings are needed,
+    // clients can format them as required. Formatting helpers were intentionally removed to return raw values.
 }
