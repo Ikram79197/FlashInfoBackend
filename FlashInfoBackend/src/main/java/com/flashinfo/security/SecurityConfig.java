@@ -38,18 +38,13 @@ public class SecurityConfig {
             // enable CORS support using the bean defined below
             .cors().and()
             .authorizeHttpRequests(auth -> auth
-                // allow preflight OPTIONS for all paths
-                .requestMatchers(HttpMethod.OPTIONS, 
-                        "/**").permitAll()
-                // allow Spring error page to be returned without authentication
-                .requestMatchers("/error").permitAll()
-                .requestMatchers("/api/auth/login").permitAll()
-                .anyRequest().authenticated()
+                // allow all requests without authentication
+                .anyRequest().permitAll()
             )
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // run JWT filter before Spring's username/password filter
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        // JWT filter disabled - authentication disabled
+        // http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -1,0 +1,12 @@
+@media (max-width: 600px) {
+  .ca-global-card {
+    min-width: 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .ca-global-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+}

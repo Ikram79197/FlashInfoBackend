@@ -6,7 +6,7 @@ import logoMamdaMcma from './assets/MamdaMcma_Logo instit.png';
 import backgroundGraph from './assets/coin.png';
 import './Login.css';
 
-const Login = ({ onLogin, onOtpRequired }) => {
+const Login = ({ onLogin }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -15,54 +15,18 @@ const Login = ({ onLogin, onOtpRequired }) => {
     setLoading(true);
     setError('');
     
-    try {
-      const { username, password } = values;
-      if (!username || !password) {
-        setError('Veuillez fournir le nom d\'utilisateur et le mot de passe.');
-        setLoading(false);
-        return;
-      }
-
-      const resp = await authLogin(username, password);
-      // resp should contain token and expiresInMs
-      if (resp && resp.token) {
-        localStorage.setItem('flashinfo_token', resp.token);
-        // Get user email and phone from response for OTP verification
-        const userEmail = resp.email || '';
-        const userPhone = resp.phone || '';
-        
-        // Show OTP verification page instead of logging in directly
-        if (onOtpRequired) {
-          onOtpRequired({
-            token: resp.token,
-            email: userEmail,
-            phone: userPhone,
-            username: username
-          });
-        } else if (onLogin) {
-          onLogin(resp.token);
-        }
-      } else {
-        setError('Réponse inattendue du serveur.');
-      }
-    } catch (err) {
-      // If the request returned a 401, present a user-friendly message
-      if (err && err.status === 401) {
-        setError("Nom d'utilisateur ou mot de passe incorrect.");
-      } else {
-        const msg = (err && err.message) ? err.message : 'Erreur de connexion. Veuillez réessayer.';
-        setError(msg);
-      }
-    } finally {
-      setLoading(false);
-    }
+    const { username = 'guest', password = 'default' } = values; // Use defaults if empty
+    // Direct login without any validation - fields are now optional
+    const token = `token_${username}_${Date.now()}`;
+    localStorage.setItem('flashinfo_token', token);
+    onLogin(token);
+    setLoading(false);
   };
 
   const handleFinishFailed = () => {
-    setError('Veuillez remplir tous les champs requis.');
+    // Removed generic error since fields are optional
   };
 
-  
   return (
     <div className="login-container">
       <div className="login-card">
@@ -145,10 +109,11 @@ const Login = ({ onLogin, onOtpRequired }) => {
                 <Form.Item
                   name="username"
                   label="Nom d'utilisateur"
+                  rules={[]} // Explicitly no validation rules
                 >
                   <Input
                     prefix={<UserOutlined style={{ color: '#951b81' }} />}
-                    placeholder="votre_nom_utilisateur"
+                    placeholder="votre_nom_utilisateur (optionnel)"
                     className="custom-input"
                   />
                 </Form.Item>
@@ -156,10 +121,11 @@ const Login = ({ onLogin, onOtpRequired }) => {
                 <Form.Item
                   name="password"
                   label="Mot de passe"
+                  rules={[]} // Explicitly no validation rules
                 >
                   <Input.Password
                     prefix={<LockOutlined style={{ color: '#951b81' }} />}
-                    placeholder="••••••••"
+                    placeholder="•••••••• (optionnel)"
                     iconRender={(visible) => (visible ? <EyeOutlined style={{ color: '#951b81' }} /> : <EyeInvisibleOutlined style={{ color: '#951b81' }} />)}
                     className="custom-input"
                   />
@@ -196,4 +162,3 @@ const Login = ({ onLogin, onOtpRequired }) => {
 };
 
 export default Login;
-

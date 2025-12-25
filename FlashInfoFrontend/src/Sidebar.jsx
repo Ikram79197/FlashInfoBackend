@@ -13,7 +13,7 @@ import {
 const { Sider } = Layout;
 
 export default function Sidebar({ selectedKey, onSelect, onLogout }) {
-  const [drawerVisible, setDrawerVisible] = useState(true);
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
   return (
     <>
@@ -65,16 +65,16 @@ export default function Sidebar({ selectedKey, onSelect, onLogout }) {
                   icon: <InfoCircleOutlined style={{ color: '#3b82f6' }} />, 
                   label: <span className="font-medium">Flash Info</span>
                 },
-                { 
-                  key: "syntheseGlobale", 
-                  icon: <FileTextOutlined style={{ color: '#3b82f6' }} />, 
-                  label: <span className="font-medium">Synthèse globale</span>
-                },
-                { 
-                  key: "dashboard", 
-                  icon: <DashboardOutlined style={{ color: '#3b82f6' }} />, 
-                  label: <span className="font-medium">Dashboard</span>
-                },
+                // { 
+                //   key: "syntheseGlobale", 
+                //   icon: <FileTextOutlined style={{ color: '#3b82f6' }} />, 
+                //   label: <span className="font-medium">Synthèse globale</span>
+                // },
+                // { 
+                //   key: "dashboard", 
+                //   icon: <DashboardOutlined style={{ color: '#3b82f6' }} />, 
+                //   label: <span className="font-medium">Dashboard</span>
+                // },
                 { 
                   key: "settings", 
                   icon: <SettingOutlined style={{ color: '#3b82f6' }} />, 
