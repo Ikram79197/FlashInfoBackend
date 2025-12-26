@@ -1,32 +1,47 @@
 package com.flashinfo.security;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
-import java.util.Collection;
+import java.util.ArrayList;
+import io.jsonwebtoken.Jwts;
 
-public class AuthorizationFilter extends OncePerRequestFilter {
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        // Example: you could enforce role-based checks per path here
-        // e.g., if (request.getRequestURI().startsWith("/admin") && !hasRole(auth, "ROLE_ADMIN")) { ... }
-
-        filterChain.doFilter(request, response);
+public class AuthorizationFilter extends BasicAuthenticationFilter {
+    public AuthorizationFilter(AuthenticationManager authManager) {
+        super(authManager);
     }
 
-    private boolean hasRole(Authentication auth, String role) {
-        if (auth == null) return false;
-        Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
-        return authorities.stream().anyMatch(a -> a.getAuthority().equals(role));
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+        String header = request.getHeader(SecurityConstants.HEADER_STRING);
+        if (header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+            chain.doFilter(request, response);
+            return;
+        }
+        UsernamePasswordAuthenticationToken authentication = getAuthentication(request);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        chain.doFilter(request, response);
+    }
+
+    private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
+        String token = request.getHeader(SecurityConstants.HEADER_STRING);
+        if (token != null) {
+            token = token.replace(SecurityConstants.TOKEN_PREFIX, "");
+            String user = Jwts.parser()
+                    .setSigningKey(SecurityConstants.SECRET.getBytes())
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+            if (user != null) {
+                return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+            }
+        }
+        return null;
     }
 }

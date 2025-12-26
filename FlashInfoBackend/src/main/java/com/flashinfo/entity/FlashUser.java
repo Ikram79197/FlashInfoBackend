@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.util.Objects;
 
 @Entity
-@Table(name = "flashUsers", schema = "dbo")
+@Table(name = "users", schema = "dbo")
 public class FlashUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

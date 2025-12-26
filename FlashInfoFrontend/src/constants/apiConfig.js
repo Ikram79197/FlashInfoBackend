@@ -1,6 +1,6 @@
 // Configuration des URLs de l'API
-// export const API_PRODUCTION_URL = 'http://localhost:8080/api';
-export const API_PRODUCTION_URL = 'https://flashinfo.mamda-mcma.ma/flashInfo/api';
+export const API_PRODUCTION_URL = 'http://localhost:8080/api';
+// export const API_PRODUCTION_URL = 'https://flashinfo.mamda-mcma.ma/flashInfo/api';
 
 
 // Fonction REQUEST_UC réutilisable pour toutes les requêtes API

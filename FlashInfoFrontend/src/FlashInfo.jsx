@@ -5,6 +5,10 @@ import { getAllChiffreAffaires, getCaNonVieThisMonth } from "./Api/FlashInfoApi"
 import { formatNumber, formatPercent } from './utils/formatters';
 import logoMamdaMcma from './assets/MamdaMcma_Logo instit.png';
 import testImage from './assets/testImage.png';
+import caGlobalIcon from './assets/ca-global-icon.png';
+import iconNonVie from './assets/iconNONvie.png';
+import iconVie from './assets/iconVie.png';
+import iconCAm1 from './assets/icon-cam-1.png';
 
 // Fonction utilitaire pour déterminer le style selon la valeur d'évolution
 function getEvolutionStyle(value) {
@@ -69,10 +73,7 @@ function getEvolutionColor(value) {
     return { color: '#22c55e', fontWeight: 700 };
 }
 
-import caGlobalIcon from './assets/ca-global-icon.png';
-import iconNonVie from './assets/iconNONvie.png';
-import iconVie from './assets/iconVie.png';
-import iconCAm1 from './assets/icon-cam-1.png';
+
 export default function FlashInfo() {
     const [selectedCard, setSelectedCard] = useState(null);
     const [data, setData] = useState([]);
