@@ -33,8 +33,9 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
         String token = request.getHeader(SecurityConstants.HEADER_STRING);
         if (token != null) {
             token = token.replace(SecurityConstants.TOKEN_PREFIX, "");
-            String user = Jwts.parser()
-                    .setSigningKey(SecurityConstants.SECRET.getBytes())
+            String user = Jwts.parserBuilder()
+                    .setSigningKey(SecurityConstants.SECRET_KEY)
+                    .build()
                     .parseClaimsJws(token)
                     .getBody()
                     .getSubject();

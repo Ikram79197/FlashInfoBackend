@@ -28,6 +28,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         try {
             com.flashinfo.dto.LoginRequest creds = new ObjectMapper().readValue(request.getInputStream(), com.flashinfo.dto.LoginRequest.class);
+            System.out.println("Login attempt: " + creds.getUsername() + " / " + creds.getPassword()); // Debug only
             return getAuthenticationManager().authenticate(
                 new UsernamePasswordAuthenticationToken(
                     creds.getUsername(),
@@ -44,10 +45,14 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         String username = ((User) authResult.getPrincipal()).getUsername();
         String token = Jwts.builder()
-                .setSubject(username)
-                .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS512, SecurityConstants.SECRET.getBytes())
-                .compact();
+            .setSubject(username)
+            .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
+            .signWith(SecurityConstants.SECRET_KEY, SignatureAlgorithm.HS512)
+            .compact();
         response.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        String json = "{\"token\": \"" + SecurityConstants.TOKEN_PREFIX + token + "\"}";
+        response.getWriter().write(json);
     }
 }
