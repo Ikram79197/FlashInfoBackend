@@ -107,15 +107,10 @@ export function getCaVieExercice() {
     });
 }
 
-/**
- * Authenticate user and return JWT
- * @param {string} username
- * @param {string} password
- * @returns {Promise<Object>} { token, expiresInMs }
- */
+
 export function authLogin(username, password) {
     return REQUEST_UC({
-        url: API_PRODUCTION_URL + "/auth/login",
+        url: API_PRODUCTION_URL + "/login",
         method: "POST",
         data: { username, password }
     });

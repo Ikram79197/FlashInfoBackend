@@ -25,7 +25,8 @@ public class WebSecurity {
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
         http.cors().and().csrf().disable()
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers(SecurityConstants.SIGN_UP_URL).permitAll()
+                // Allow sign-up and the login processing URL through without authentication
+                .requestMatchers(SecurityConstants.SIGN_UP_URL, SecurityConstants.LOGIN_URL).permitAll()
                 .anyRequest().authenticated()
             )
             .addFilter(new AuthenticationFilter(authenticationManager))

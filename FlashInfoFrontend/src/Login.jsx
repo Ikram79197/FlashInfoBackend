@@ -14,17 +14,40 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (values) => {
     setLoading(true);
     setError('');
-    
-    const { username = 'guest', password = 'default' } = values; // Use defaults if empty
-    // Direct login without any validation - fields are now optional
-    const token = `token_${username}_${Date.now()}`;
-    localStorage.setItem('flashinfo_token', token);
-    onLogin(token);
-    setLoading(false);
+    try {
+      const username = (values && values.username) || '';
+      const password = (values && values.password) || '';
+      const resp = await authLogin(username, password);
+      // resp may be axios response or data directly
+      const data = resp && resp.data ? resp.data : resp;
+      const token = data?.token || data?.accessToken || data?.jwt || data;
+      if (!token) {
+        throw new Error(data?.message || 'Authentication failed');
+      }
+      // Ensure we store the raw JWT (without the 'Bearer ' prefix)
+      const tokenStr = String(token);
+      const rawToken = tokenStr.startsWith('Bearer ') ? tokenStr.substring(7) : tokenStr;
+      if (!rawToken || !rawToken.includes('.')) {
+        throw new Error('Token invalide reçu du serveur');
+      }
+      localStorage.setItem('flashinfo_token', rawToken);
+      onLogin(rawToken);
+    } catch (err) {
+      let msg;
+      // fetch-based REQUEST_UC attaches numeric status and body on error
+      if (err && (err.status === 401 || err.status === 403)) {
+        msg = 'Mail ou mot de passe incorrect';
+      } else {
+        msg = err?.body || err?.message || 'Erreur lors de la connexion';
+      }
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFinishFailed = () => {
-    // Removed generic error since fields are optional
+    // Keep silent — validation is optional; handled on submit
   };
 
   return (
@@ -108,7 +131,7 @@ const Login = ({ onLogin }) => {
               >
                 <Form.Item
                   name="username"
-                  label="Nom d'utilisateur"
+                  label="Email"
                   rules={[]} // Explicitly no validation rules
                 >
                   <Input

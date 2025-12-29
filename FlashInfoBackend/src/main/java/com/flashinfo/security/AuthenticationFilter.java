@@ -22,6 +22,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     public AuthenticationFilter(AuthenticationManager authenticationManager) {
         super.setAuthenticationManager(authenticationManager);
+        // Accept login requests sent to /api/login (frontend uses /api prefix)
+        super.setFilterProcessesUrl(SecurityConstants.LOGIN_URL);
     }
 
     @Override
