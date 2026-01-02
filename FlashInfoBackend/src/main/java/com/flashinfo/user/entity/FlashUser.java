@@ -20,7 +20,7 @@ public class FlashUser {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String username;
+    private String userName;
 
     @Column(nullable = false)
     private String password;
@@ -40,5 +40,8 @@ public class FlashUser {
     @Enumerated(EnumType.STRING)
     private RoleEnum roles;
 
+    // Appareil de confiance : 0 = non, 1 = oui
+    @Column(name = "trusted_device")
+    private Boolean trustedDevice;
 
 }

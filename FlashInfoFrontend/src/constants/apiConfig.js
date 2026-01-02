@@ -12,15 +12,22 @@ export function REQUEST_UC({ url, data, method = 'GET', headers = {}, timeout = 
         ...headers
     };
 
-    // Automatically attach Authorization header if token is present in localStorage
-    try {
-        const token = localStorage.getItem('flashinfo_token');
-        if (token) {
-            defaultHeaders['Authorization'] = `Bearer ${token}`;
+    const isPublicOtp = url && url.includes('/public/otp');
+    if (!isPublicOtp) {
+        try {
+            const token = localStorage.getItem('flashinfo_token');
+            // Only attach if token looks like a JWT (contains two periods)
+            if (token && typeof token === 'string' && token.split('.').length === 3) {
+                defaultHeaders['Authorization'] = `Bearer ${token}`;
+            } else if (token) {
+                // Remove invalid token to avoid future issues
+                localStorage.removeItem('flashinfo_token');
+            }
+        } catch (e) {
+            // localStorage may be unavailable in some environments; ignore silently
         }
-    } catch (e) {
-        // localStorage may be unavailable in some environments; ignore silently
     }
+
 
     const requestOptions = {
         method,

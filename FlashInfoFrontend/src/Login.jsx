@@ -2,6 +2,8 @@ import { EyeOutlined, EyeInvisibleOutlined, UserOutlined, LockOutlined } from '@
 import { Form, Input, Button, Checkbox, Alert } from 'antd';
 import React, { useState } from 'react';
 import { authLogin } from './Api/FlashInfoApi';
+import { verifyOtp } from './Api/FlashInfoApi';
+import OtpVerification from './OtpVerification';
 import logoMamdaMcma from './assets/MamdaMcma_Logo instit.png';
 import backgroundGraph from './assets/coin.png';
 import './Login.css';
@@ -10,6 +12,8 @@ const Login = ({ onLogin }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpInfo, setOtpInfo] = useState({ username: '', email: '', phone: '' });
 
   const handleSubmit = async (values) => {
     setLoading(true);
@@ -18,13 +22,20 @@ const Login = ({ onLogin }) => {
       const username = (values && values.username) || '';
       const password = (values && values.password) || '';
       const resp = await authLogin(username, password);
-      // resp may be axios response or data directly
       const data = resp && resp.data ? resp.data : resp;
-      const token = data?.token || data?.accessToken || data?.jwt || data;
+      // Si pas de token dans la réponse, afficher OTP
+      const token = data?.token || data?.accessToken || data?.jwt;
       if (!token) {
-        throw new Error(data?.message || 'Authentication failed');
+        setOtpStep(true);
+        // Si username ressemble à un email, extraire le login (avant le @)
+        let login = username;
+        if (username && username.includes('@')) {
+          login = username.split('@')[0];
+        }
+        setOtpInfo({ username: login, email: data.email, phone: data.phone });
+        return;
       }
-      // Ensure we store the raw JWT (without the 'Bearer ' prefix)
+      // Sinon, login classique avec token
       const tokenStr = String(token);
       const rawToken = tokenStr.startsWith('Bearer ') ? tokenStr.substring(7) : tokenStr;
       if (!rawToken || !rawToken.includes('.')) {
@@ -34,7 +45,6 @@ const Login = ({ onLogin }) => {
       onLogin(rawToken);
     } catch (err) {
       let msg;
-      // fetch-based REQUEST_UC attaches numeric status and body on error
       if (err && (err.status === 401 || err.status === 403)) {
         msg = 'Mail ou mot de passe incorrect';
       } else {
@@ -46,9 +56,96 @@ const Login = ({ onLogin }) => {
     }
   };
 
+  // Gestion de la vérification OTP
+  const handleOtpVerify = async (otpCode) => {
+    setLoading(true);
+    setError('');
+    try {
+      let resp;
+      try {
+        resp = await verifyOtp(otpInfo.username, otpCode);
+      } catch (e) {
+        // Si le backend retourne du texte et pas du JSON, on ignore l'erreur de parsing
+        if (e && e.status === 200 && e.response) {
+          resp = e.response;
+        } else {
+          throw e;
+        }
+      }
+      // Chercher le token dans le body ou dans le header Authorization
+      let token = resp?.token || resp?.accessToken || resp?.jwt;
+      let username = null;
+      // Si pas de token dans le body, essayer de le lire dans le header (fetch natif)
+      if (resp && resp.headers && typeof resp.headers.get === 'function') {
+        const authHeader = resp.headers.get('Authorization') || resp.headers.get('authorization');
+        if (!token && authHeader && authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+        }
+        // Récupérer le nom d'utilisateur dans le header si présent
+        username = resp.headers.get('userEmail') || resp.headers.get('username') || null;
+      }
+      // Si pas de token, essayer de le lire dans l'objet brut (cas custom fetch)
+      if (!token && resp && (resp.Authorization || resp.authorization)) {
+        const authHeader = resp.Authorization || resp.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+        }
+      }
+      // Si toujours pas de token, essayer de le lire dans la dernière réponse fetch (cas edge)
+      if (!token && window && window.fetch) {
+        try {
+          const lastResponse = window.__lastOtpResponse;
+          if (lastResponse && lastResponse.headers) {
+            const authHeader = lastResponse.headers.get('Authorization') || lastResponse.headers.get('authorization');
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+              token = authHeader.substring(7);
+            }
+            if (!username) {
+              username = lastResponse.headers.get('userEmail') || lastResponse.headers.get('username') || null;
+            }
+          }
+        } catch (e) {}
+      }
+      if (!token) {
+        throw new Error('Token JWT non reçu après OTP');
+      }
+      localStorage.setItem('flashinfo_token', token);
+      if (username) {
+        localStorage.setItem('flashinfo_username', username);
+      }
+      setOtpStep(false);
+      onLogin(token);
+    } catch (err) {
+      let msg = err?.body || err?.message || 'Erreur lors de la vérification OTP';
+      // Si le message est un JSON (ex: {"error":...}), on extrait le message
+      try {
+        if (typeof msg === 'string' && msg.trim().startsWith('{')) {
+          const parsed = JSON.parse(msg);
+          if (parsed && parsed.error) msg = parsed.error;
+        }
+      } catch (e) {}
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFinishFailed = () => {
     // Keep silent — validation is optional; handled on submit
   };
+
+  if (otpStep) {
+    return (
+      <OtpVerification
+        onVerify={handleOtpVerify}
+        onBack={() => setOtpStep(false)}
+        email={otpInfo.email}
+        phone={otpInfo.phone}
+        loading={loading}
+        error={error}
+      />
+    );
+  }
 
   return (
     <div className="login-container">
@@ -82,7 +179,6 @@ const Login = ({ onLogin }) => {
                 <div className="bar-3"></div>
               </div>
               <div className="info-card">
-                
                 <div className="info-row">
                   <span className="info-value">MAMDA • MCMA</span>
                 </div>

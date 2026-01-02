@@ -30,9 +30,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         FlashUser user = userRepository.findByUserEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         log.info("Loaded user from DB: username={}, password={}, roles={}",
-            user.getUsername(), user.getPassword(), user.getRoles());
+            user.getUserName(), user.getPassword(), user.getRoles());
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
+                user.getUserName(),
                 user.getPassword(),
                 getAuthorities(user)
         );

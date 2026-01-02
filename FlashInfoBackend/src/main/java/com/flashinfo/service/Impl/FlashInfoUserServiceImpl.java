@@ -30,7 +30,7 @@ public class FlashInfoUserServiceImpl implements FlashInfoUserService{
 
         String hashedPassword = passwordEncoder.encode(userRequestModel.getPassword());
         FlashUser user = FlashUser.builder()
-                .username(userRequestModel.getUsername())
+                .userName(userRequestModel.getUsername())
                 .password(hashedPassword)
                 .roles(userRequestModel.getRoles())
                 .userEmail(userRequestModel.getUserEmail())
@@ -38,5 +38,21 @@ public class FlashInfoUserServiceImpl implements FlashInfoUserService{
                 .build();
         return flashUserRepository.save(user);
     }
-    
+
+    @Override
+    public FlashUser getUserActive(String userLogin) {
+        return flashUserRepository.findByUserEmail(userLogin)
+                .orElseThrow(() -> new RuntimeException("User not found or inactive"));
+    }
+
+    @Override
+    public FlashUser getUserByUserName(String userName) {
+        return flashUserRepository.findByUserNameIgnoreCaseCustom(userName)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    @Override
+    public FlashUser saveUser(FlashUser user) {
+        return flashUserRepository.save(user);
+    }
 }
