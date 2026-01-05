@@ -10,11 +10,16 @@ import org.springframework.web.client.RestTemplate;
 
 import com.flashinfo.dto.OtpGenererRequestModel;
 import com.flashinfo.dto.OtpValidateRequestModel;
+import com.flashinfo.security.SecurityConstants;
 import com.flashinfo.util.OtpUtilitis;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Service
 public class OtpServiceImpl {
+
+    private static final Logger log = LoggerFactory.getLogger(OtpServiceImpl.class);
 
     @Autowired
     private RestTemplate restTemplate;
@@ -48,7 +53,7 @@ public class OtpServiceImpl {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + token);
             headers.set("Content-Type", "application/json");
-
+        
             HttpEntity<OtpValidateRequestModel> entity = new HttpEntity<>(requestModel, headers);
             return restTemplate.postForEntity(env.getProperty("otp.otpServiceURL.service") + "/validateOtp", entity, String.class);
         } catch (Exception e) {

@@ -22,20 +22,19 @@ const Login = ({ onLogin }) => {
       const username = (values && values.username) || '';
       const password = (values && values.password) || '';
       const resp = await authLogin(username, password);
-      const data = resp && resp.data ? resp.data : resp;
-      // Si pas de token dans la réponse, afficher OTP
+      const data = resp ;
       const token = data?.token || data?.accessToken || data?.jwt;
+      const userLogin = data?.username 
+      console.log("response login ", resp);
+      console.log('Login successful for user:', userLogin);
+      localStorage.setItem('flashinfo_userLogin', userLogin);
+      localStorage.setItem('flashinfo_username', username);
+      // Si pas de token dans la réponse, afficher OTP
       if (!token) {
         setOtpStep(true);
-        // Si username ressemble à un email, extraire le login (avant le @)
-        let login = username;
-        if (username && username.includes('@')) {
-          login = username.split('@')[0];
-        }
-        setOtpInfo({ username: login, email: data.email, phone: data.phone });
+        setOtpInfo({ username : userLogin, phone: data.phone });
         return;
       }
-      // Sinon, login classique avec token
       const tokenStr = String(token);
       const rawToken = tokenStr.startsWith('Bearer ') ? tokenStr.substring(7) : tokenStr;
       if (!rawToken || !rawToken.includes('.')) {
@@ -139,7 +138,6 @@ const Login = ({ onLogin }) => {
       <OtpVerification
         onVerify={handleOtpVerify}
         onBack={() => setOtpStep(false)}
-        email={otpInfo.email}
         phone={otpInfo.phone}
         loading={loading}
         error={error}

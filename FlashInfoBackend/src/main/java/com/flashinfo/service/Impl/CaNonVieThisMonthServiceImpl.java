@@ -18,7 +18,14 @@ public class CaNonVieThisMonthServiceImpl implements CaNonVieThisMonthService {
 
     @Override
     public List<CaNonVieThisMonthDto> getAllCaNonVieThisMonth() {
-        List<Object[]> rows = repository.findAllCaNonVieThisMonthNative();
+        // Get the current year and previous year dynamically
+        int currentYear = java.time.LocalDate.now().getYear();
+        int previousYear = currentYear - 1;
+
+        // Call the repository method with the required arguments
+        List<Object[]> rows = repository.findAllCaNonVieThisMonthNative(currentYear, previousYear);
+
+        // Map the results to DTOs
         return rows.stream().map(mapper::mapToDto).toList();
     }
 }

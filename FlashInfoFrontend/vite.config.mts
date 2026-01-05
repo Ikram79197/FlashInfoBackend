@@ -2,9 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  // When deploying the app under a sub-path (Tomcat context '/flashInfoApp'),
-  // set `base` so Vite generates asset URLs that include the context path.
-  base: '/flashInfoApp/',
+  base: '/',
   plugins: [react()],
   build: {
     outDir: "build",

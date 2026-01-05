@@ -119,6 +119,11 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                     return;
                 }
                 // If OTP is successful, continue with your normal flow (e.g. send JWT, etc.)
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                String json = "{\"otp\": \"generated\", \"username\": \"" + username + "\"}";
+                response.getWriter().write(json);
+                return;
             } catch (Exception e) {
                 log.error("Erreur lors de l'appel à l'API OTP: {}", e.getMessage());
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
