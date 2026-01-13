@@ -2,34 +2,55 @@ import React, { useState } from "react";
 import Login from "./Login";
 import FlashInfo from "./FlashInfo";
 import Sidebar from "./Sidebar";
+import ChangePassword from "./ChangePassword";
 
 export default function App() {
-  // 🔹 Par défaut = PAS CONNECTÉ → LOGIN affiché
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
-  // LOGIN
-  const handleLogin = (token) => {
+  const handleOtpSuccess = (token, passwordChangedFromApi) => {
     localStorage.setItem("flashinfo_token", token);
-    setIsLoggedIn(true);
+    if (passwordChangedFromApi === "0" || passwordChangedFromApi === 0) {
+      setShowChangePassword(true); 
+    } else {
+      setIsLoggedIn(true); 
+    }
+  };
+  const handleBackToLogin = () => {
+    setShowChangePassword(false);
   };
 
-  // LOGOUT
+  const handlePasswordChanged = () => {
+    setShowChangePassword(false);
+    setIsLoggedIn(true); 
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem("flashinfo_token");
+    localStorage.clear();
     setIsLoggedIn(false);
+    setShowChangePassword(false);
   };
 
   return (
     <div className="min-h-screen bg-background-light text-zinc-800">
-      
-      {/* 🔥 PREMIÈRE PAGE = LOGIN */}
-      {!isLoggedIn && (
+      {/* 1. Écran Login */}
+      {!isLoggedIn && !showChangePassword && (
         <div className="flex items-center justify-center min-h-screen">
-          <Login onLogin={handleLogin} />
+          <Login onLogin={handleOtpSuccess} /> {/* Passe la fonction modifiée */}
         </div>
       )}
 
-      {/* 🔥 APRÈS LOGIN */}
+      {/* 2. Écran ChangePassword (seulement si password_changed = 0) */}
+      {showChangePassword && (
+        <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+          <ChangePassword
+            onBack={handleBackToLogin}
+            onPasswordChanged={handlePasswordChanged}
+          />
+        </div>
+      )}
+
+      {/* 3. Dashboard */}
       {isLoggedIn && (
         <div className="flex">
           <Sidebar onLogout={handleLogout} />

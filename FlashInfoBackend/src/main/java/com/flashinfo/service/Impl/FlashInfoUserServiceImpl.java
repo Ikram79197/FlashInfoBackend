@@ -10,6 +10,8 @@ import com.flashinfo.service.FlashInfoUserService;
 import com.flashinfo.user.entity.FlashUser;
 import com.flashinfo.user.repository.FlashUserRepository;
 
+import java.time.LocalDateTime;
+
 @Service
 public class FlashInfoUserServiceImpl implements FlashInfoUserService{
 
@@ -53,6 +55,18 @@ public class FlashInfoUserServiceImpl implements FlashInfoUserService{
 
     @Override
     public FlashUser saveUser(FlashUser user) {
+        return flashUserRepository.save(user);
+    }
+
+    @Override
+    public FlashUser updatePassword(String userLogin, String newPassword) {
+        FlashUser user = flashUserRepository.findByUserNameIgnoreCaseCustom(userLogin) // Utilisez une méthode adaptée pour rechercher par userLogin
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String hashedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(hashedPassword);
+        user.setPasswordChanged(true); // Set passwordChanged to 1
+        user.setPasswordChangeDate(LocalDateTime.now()); // Set the current date and time
         return flashUserRepository.save(user);
     }
 }

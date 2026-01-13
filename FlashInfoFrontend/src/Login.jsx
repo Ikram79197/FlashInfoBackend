@@ -54,80 +54,39 @@ const Login = ({ onLogin }) => {
       setLoading(false);
     }
   };
+const handleOtpVerify = async (otpCode) => {
+  // ... ton code existant
 
-  // Gestion de la vérification OTP
-  const handleOtpVerify = async (otpCode) => {
-    setLoading(true);
-    setError('');
-    try {
-      let resp;
-      try {
-        resp = await verifyOtp(otpInfo.username, otpCode);
-      } catch (e) {
-        // Si le backend retourne du texte et pas du JSON, on ignore l'erreur de parsing
-        if (e && e.status === 200 && e.response) {
-          resp = e.response;
-        } else {
-          throw e;
-        }
-      }
-      // Chercher le token dans le body ou dans le header Authorization
-      let token = resp?.token || resp?.accessToken || resp?.jwt;
-      let username = null;
-      // Si pas de token dans le body, essayer de le lire dans le header (fetch natif)
-      if (resp && resp.headers && typeof resp.headers.get === 'function') {
-        const authHeader = resp.headers.get('Authorization') || resp.headers.get('authorization');
-        if (!token && authHeader && authHeader.startsWith('Bearer ')) {
-          token = authHeader.substring(7);
-        }
-        // Récupérer le nom d'utilisateur dans le header si présent
-        username = resp.headers.get('userEmail') || resp.headers.get('username') || null;
-      }
-      // Si pas de token, essayer de le lire dans l'objet brut (cas custom fetch)
-      if (!token && resp && (resp.Authorization || resp.authorization)) {
-        const authHeader = resp.Authorization || resp.authorization;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-          token = authHeader.substring(7);
-        }
-      }
-      // Si toujours pas de token, essayer de le lire dans la dernière réponse fetch (cas edge)
-      if (!token && window && window.fetch) {
-        try {
-          const lastResponse = window.__lastOtpResponse;
-          if (lastResponse && lastResponse.headers) {
-            const authHeader = lastResponse.headers.get('Authorization') || lastResponse.headers.get('authorization');
-            if (authHeader && authHeader.startsWith('Bearer ')) {
-              token = authHeader.substring(7);
-            }
-            if (!username) {
-              username = lastResponse.headers.get('userEmail') || lastResponse.headers.get('username') || null;
-            }
-          }
-        } catch (e) {}
-      }
-      if (!token) {
-        throw new Error('Token JWT non reçu après OTP');
-      }
-      localStorage.setItem('flashinfo_token', token);
-      if (username) {
-        localStorage.setItem('flashinfo_username', username);
-      }
-      setOtpStep(false);
-      onLogin(token);
-    } catch (err) {
-      let msg = err?.body || err?.message || 'Erreur lors de la vérification OTP';
-      // Si le message est un JSON (ex: {"error":...}), on extrait le message
-      try {
-        if (typeof msg === 'string' && msg.trim().startsWith('{')) {
-          const parsed = JSON.parse(msg);
-          if (parsed && parsed.error) msg = parsed.error;
-        }
-      } catch (e) {}
-      setError(msg);
-    } finally {
-      setLoading(false);
+  try {
+    const resp = await verifyOtp(otpInfo.username, otpCode);
+
+    // Récupère le token et password_changed depuis la réponse
+    let token = resp?.token || resp?.accessToken || resp?.jwt;
+    const passwordChanged = resp?.password_changed || resp?.passwordChanged;
+
+    if (!token) {
+      throw new Error('Token JWT non reçu après OTP');
     }
-  };
+
+    localStorage.setItem('flashinfo_token', token);
+
+    // Stocke aussi le username si tu veux
+    if (otpInfo.username) {
+      localStorage.setItem('flashinfo_userLogin', otpInfo.username);
+      localStorage.setItem('flashinfo_username', otpInfo.username);
+    }
+
+    setOtpStep(false);
+
+    // → Passe DEUX paramètres à onLogin : token + password_changed
+    onLogin(token, passwordChanged);
+
+  } catch (err) {
+    // ... gestion erreur
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleFinishFailed = () => {
     // Keep silent — validation is optional; handled on submit

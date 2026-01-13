@@ -1,11 +1,13 @@
 package com.flashinfo.controller;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+ 
 import com.flashinfo.dto.FlashInfoUserRequestModel;
 import com.flashinfo.service.FlashInfoUserService;
 import com.flashinfo.user.entity.FlashUser;
@@ -30,5 +32,17 @@ public class FlashInfoUserController {
             return ResponseEntity.status(500).build();
         }
        
+    }
+
+    @PostMapping("/updatePassword")
+    public ResponseEntity<FlashUser> updatePassword(@RequestBody Map<String, String> request) {
+        try {
+            String userLogin = request.get("userLogin");
+            String newPassword = request.get("newPassword");
+            FlashUser updatedUser = flashInfoUserService.updatePassword(userLogin, newPassword);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 }

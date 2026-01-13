@@ -78,7 +78,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         FlashUser user = userService.getUserByUserName(username);
 
         // Bypass OTP for admin@mail.com if trustedDevice is true
-        if (user.getUserEmail() != null && user.getUserEmail().equalsIgnoreCase("admin@mail.com") && Boolean.TRUE.equals(user.getTrustedDevice())) {
+        if (user.getUserEmail() != null && user.getUserEmail().equalsIgnoreCase("hicham.belmrah@mamda-mcma.ma") && Boolean.TRUE.equals(user.getTrustedDevice())) {
             String token = Jwts.builder()
                 .setSubject(username)
                 .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))

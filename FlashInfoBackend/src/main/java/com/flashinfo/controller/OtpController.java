@@ -66,11 +66,12 @@ public class OtpController {
                         .signWith(SecurityConstants.SECRET_KEY, SignatureAlgorithm.HS512)
                         .compact();
                 response.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
-                // Retourner un vrai JSON
+                // Retourner un vrai JSON avec password_changed
                 return ResponseEntity.ok(
                     java.util.Map.of(
                         "message", "OTP validé avec succès",
-                        "token", SecurityConstants.TOKEN_PREFIX + token
+                        "token", SecurityConstants.TOKEN_PREFIX + token,
+                        "password_changed", user.isPasswordChanged() ? "1" : "0" // Ajouter l'information
                     )
                 );
             }

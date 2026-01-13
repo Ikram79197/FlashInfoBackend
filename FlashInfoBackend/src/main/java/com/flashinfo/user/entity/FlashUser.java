@@ -2,6 +2,7 @@ package com.flashinfo.user.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
+import java.time.LocalDateTime;
 
 import com.flashinfo.util.RoleEnum;
 
@@ -44,4 +45,13 @@ public class FlashUser {
     @Column(name = "trusted_device")
     private Boolean trustedDevice;
 
+    @Column(name = "password_changed", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
+    private Boolean passwordChanged;
+
+    @Column(name = "password_change_date", nullable = true)
+    private LocalDateTime passwordChangeDate;
+
+    public Boolean isPasswordChanged() {
+        return passwordChanged;
+    }
 }

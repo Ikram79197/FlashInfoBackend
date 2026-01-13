@@ -8,4 +8,5 @@ public interface FlashInfoUserService {
     public FlashUser getUserActive(String userLogin);
     public FlashUser getUserByUserName(String userName);
     public FlashUser saveUser(FlashUser user);
+    public FlashUser updatePassword(String userLogin, String newPassword);
 }

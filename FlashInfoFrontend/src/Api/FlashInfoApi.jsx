@@ -1,4 +1,3 @@
-
 import { REQUEST_UC } from "../constants/apiConfig";
 import { API_PRODUCTION_URL } from "../constants/apiConfig";
 
@@ -118,8 +117,6 @@ export function authLogin(username, password) {
 }
 
 export function verifyOtp(username, otpCode) {
-    // Si username est un email, on doit envoyer le vrai userLogin (nom d'utilisateur)
-    // On suppose que le champ username est toujours le login ("ikram")
     return REQUEST_UC({
         url: API_PRODUCTION_URL + "/public/otp",
         method: "POST",
@@ -129,4 +126,15 @@ export function verifyOtp(username, otpCode) {
             codeValue: otpCode
         }
     });
+}
+
+export function updatePassword(userLogin, newPassword) {
+  return REQUEST_UC({
+    url: API_PRODUCTION_URL + "/users/updatePassword",
+    method: "POST",
+    data: {
+      userLogin: userLogin,
+      newPassword: newPassword,
+    },
+  });
 }
